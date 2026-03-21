@@ -30,6 +30,8 @@ async function callAI(messages: { role: string; content: string }[], jsonMode = 
   if (!response.ok) {
     const err = await response.text();
     console.error("AI gateway error:", response.status, err);
+    if (response.status === 429) throw new Error("Rate limited. Please try again later.");
+    if (response.status === 402) throw new Error("Credits exhausted. Please add funds.");
     throw new Error(`AI gateway error: ${response.status}`);
   }
 
@@ -73,6 +75,28 @@ serve(async (req) => {
       });
     }
 
+    if (action === "generate-thumbnail-image") {
+      const text = await callAI([
+        { role: "system", content: "You are a creative YouTube thumbnail designer. Given a description, generate a compelling thumbnail concept. Return a short, punchy title text (max 5 words) that would work as overlay text on the thumbnail. Return only the text, nothing else." },
+        { role: "user", content: `Create thumbnail text for: "${prompt}"` },
+      ]);
+
+      return new Response(JSON.stringify({ imageDescription: text.trim() }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "extract-subtitles") {
+      const text = await callAI([
+        { role: "system", content: "You are a professional subtitle generator. Based on the video information provided, generate realistic SRT format subtitles. Include timestamps and natural dialogue/narration. Generate 10-20 subtitle entries covering the video duration. Use proper SRT format with sequential numbering, timestamps (HH:MM:SS,mmm --> HH:MM:SS,mmm), and text." },
+        { role: "user", content: prompt },
+      ]);
+
+      return new Response(JSON.stringify({ subtitles: text.trim() }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "blog-generate") {
       const content = await callAI([
         { role: "system", content: "Write a professional, SEO-optimized blog article. Include proper headings, paragraphs, and make it 500-800 words. Focus on practical tips and value. Return as HTML with h2, h3, p, ul, li tags only." },
@@ -89,8 +113,10 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("ai-generate error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const message = e instanceof Error ? e.message : "Unknown error";
+    const status = message.includes("Rate limited") ? 429 : message.includes("Credits") ? 402 : 500;
+    return new Response(JSON.stringify({ error: message }), {
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

@@ -24,6 +24,7 @@ export default function VideoDownloaderPage() {
   const [url, setUrl] = useState("");
   const [quality, setQuality] = useState("720p");
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [videoInfo, setVideoInfo] = useState<{ title: string; thumbnail: string } | null>(null);
 
   const handleFetch = async () => {
@@ -32,16 +33,80 @@ export default function VideoDownloaderPage() {
     if (!urlPattern.test(url)) { toast.error("Unsupported URL. Use YouTube, TikTok, Facebook, or Instagram links."); return; }
     setLoading(true);
     await new Promise(r => setTimeout(r, 1500));
-    setVideoInfo({ title: "Video Preview — Ready for Download", thumbnail: `https://img.youtube.com/vi/${extractYouTubeId(url) || "dQw4w9WgXcQ"}/hqdefault.jpg` });
+    const ytId = extractYouTubeId(url);
+    setVideoInfo({ 
+      title: "Video Preview — Ready for Download", 
+      thumbnail: ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : `https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg`
+    });
     setLoading(false);
     toast.success("Video info fetched! Select quality and download.");
+  };
+
+  const handleDownload = async () => {
+    if (!url.trim()) return;
+    setDownloading(true);
+    try {
+      // Use a third-party API approach - cobalt.tools (free, open-source)
+      const apiUrl = "https://api.cobalt.tools/api/json";
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          url: url.trim(),
+          vQuality: quality.replace("p", ""),
+          filenamePattern: "basic",
+          isNoTTWatermark: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Download service unavailable");
+      }
+
+      const data = await response.json();
+      
+      if (data.status === "stream" || data.status === "redirect") {
+        // Open download URL
+        const link = document.createElement("a");
+        link.href = data.url;
+        link.download = "video.mp4";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Download started!");
+      } else if (data.status === "picker" && data.picker?.length > 0) {
+        const link = document.createElement("a");
+        link.href = data.picker[0].url;
+        link.download = "video.mp4";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Download started!");
+      } else {
+        // Fallback: open URL directly for manual download
+        window.open(url, "_blank");
+        toast.info("Opening video page. Right-click the video and select 'Save video as...' to download.");
+      }
+    } catch (err) {
+      console.error("Download error:", err);
+      // Fallback approach
+      window.open(url, "_blank");
+      toast.info("Direct download unavailable. Opening video page — right-click to save.");
+    }
+    setDownloading(false);
   };
 
   return (
     <div className="max-w-3xl mx-auto">
       <PageHeader icon={<Download className="h-5 w-5" />} title="Download Videos Without Watermark" description="Download videos from YouTube, TikTok, Facebook, and Instagram in high quality." />
       
-      {/* Platform Icons */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center gap-4 mb-8">
         {platforms.map(p => (
           <div key={p.name} className={`h-12 w-12 rounded-xl ${p.color} flex items-center justify-center text-lg font-bold`}>
@@ -75,15 +140,15 @@ export default function VideoDownloaderPage() {
                   <SelectItem value="1080p">1080p FHD</SelectItem>
                 </SelectContent>
               </Select>
-              <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Download className="h-4 w-4 mr-2" /> Download {quality}
+              <Button onClick={handleDownload} disabled={downloading} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                {downloading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                {downloading ? "Downloading..." : `Download ${quality}`}
               </Button>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* Features */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid grid-cols-3 gap-4 mt-8">
         {features.map((feat, i) => (
           <div key={i} className="glass-panel rounded-xl p-4 text-center">
