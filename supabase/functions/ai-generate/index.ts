@@ -5,91 +5,80 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function callAI(messages: { role: string; content: string }[], jsonMode = false) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+  const body: any = {
+    model: "google/gemini-2.5-flash",
+    messages,
+  };
+
+  if (jsonMode) {
+    body.response_format = { type: "json_object" };
+  }
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error("AI gateway error:", response.status, err);
+    throw new Error(`AI gateway error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
-
-    const { action, prompt, title, subtitle, style } = await req.json();
+    const { action, prompt, title } = await req.json();
 
     if (action === "thumbnail-suggestions") {
-      const systemPrompt = `You are a professional YouTube thumbnail designer. Given a video title, suggest 4 creative thumbnail concepts. Return JSON array with objects containing: title (short concept name), colors (array of 2 hex colors for gradient), textOverlay (main text to show), fontSize (48-80).`;
-      
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `Video title: "${title}". ${systemPrompt}` }] }],
-            generationConfig: { responseMimeType: "application/json" },
-          }),
-        }
-      );
+      const text = await callAI([
+        { role: "system", content: "You are a professional YouTube thumbnail designer. Given a video title, suggest 4 creative thumbnail concepts. Return a JSON object with a \"suggestions\" array, each with: title (short concept name), colors (array of 2 hex colors), textOverlay (main text), fontSize (48-80)." },
+        { role: "user", content: `Video title: "${title}"` },
+      ], true);
 
-      if (!response.ok) {
-        const err = await response.text();
-        console.error("Gemini error:", response.status, err);
-        return new Response(JSON.stringify({ error: "AI generation failed" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      let suggestions;
+      try {
+        const parsed = JSON.parse(text);
+        suggestions = parsed.suggestions || parsed;
+      } catch {
+        suggestions = [];
       }
 
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-      return new Response(JSON.stringify({ suggestions: JSON.parse(text) }), {
+      return new Response(JSON.stringify({ suggestions }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (action === "enhance-text") {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `Rewrite this text to be more engaging and professional for a YouTube thumbnail. Keep it SHORT (max 6 words). Original: "${prompt}". Return only the improved text, nothing else.` }] }],
-          }),
-        }
-      );
+      const text = await callAI([
+        { role: "system", content: "Rewrite the given text to be more engaging and professional for a YouTube thumbnail. Keep it SHORT (max 6 words). Return only the improved text, nothing else." },
+        { role: "user", content: prompt },
+      ]);
 
-      if (!response.ok) {
-        const err = await response.text();
-        return new Response(JSON.stringify({ error: "AI text enhancement failed" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const data = await response.json();
-      const enhanced = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || prompt;
-      return new Response(JSON.stringify({ text: enhanced }), {
+      return new Response(JSON.stringify({ text: text.trim() }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (action === "blog-generate") {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `Write a professional, SEO-optimized blog article about "${prompt}". Include proper headings, paragraphs, and make it 500-800 words. Focus on practical tips and value. Return as HTML with h2, h3, p, ul, li tags only.` }] }],
-          }),
-        }
-      );
+      const content = await callAI([
+        { role: "system", content: "Write a professional, SEO-optimized blog article. Include proper headings, paragraphs, and make it 500-800 words. Focus on practical tips and value. Return as HTML with h2, h3, p, ul, li tags only." },
+        { role: "user", content: `Write about: "${prompt}"` },
+      ]);
 
-      if (!response.ok) {
-        return new Response(JSON.stringify({ error: "Blog generation failed" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const data = await response.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       return new Response(JSON.stringify({ content }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
