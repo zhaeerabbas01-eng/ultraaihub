@@ -14,6 +14,13 @@ import VideoToolsPage from "./pages/VideoToolsPage";
 import BgRemoverPage from "./pages/BgRemoverPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
+import AboutPage from "./pages/AboutPage";
+import BlogPage from "./pages/BlogPage";
+import ContactPage from "./pages/ContactPage";
+import DisclaimerPage from "./pages/DisclaimerPage";
+import CookiePolicyPage from "./pages/CookiePolicyPage";
+import GdprPage from "./pages/GdprPage";
+import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +43,13 @@ const App = () => (
             <Route path="/bg-remover" element={<BgRemoverPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/disclaimer" element={<DisclaimerPage />} />
+            <Route path="/cookies" element={<CookiePolicyPage />} />
+            <Route path="/gdpr" element={<GdprPage />} />
+            <Route path="/help" element={<HelpPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>

@@ -1,4 +1,4 @@
-import { Home, Download, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield } from "lucide-react";
+import { Home, Download, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -18,9 +18,19 @@ const mainItems = [
   { title: "BG Remover", url: "/bg-remover", icon: Image },
 ];
 
+const companyItems = [
+  { title: "About Us", url: "/about", icon: Building2 },
+  { title: "Blog", url: "/blog", icon: BookOpen },
+  { title: "Contact", url: "/contact", icon: Mail },
+  { title: "Help Center", url: "/help", icon: HelpCircle },
+];
+
 const legalItems = [
   { title: "Privacy Policy", url: "/privacy", icon: Shield },
-  { title: "Terms", url: "/terms", icon: FileText },
+  { title: "Terms of Service", url: "/terms", icon: FileText },
+  { title: "Cookie Policy", url: "/cookies", icon: Cookie },
+  { title: "GDPR", url: "/gdpr", icon: ShieldCheck },
+  { title: "Disclaimer", url: "/disclaimer", icon: AlertTriangle },
 ];
 
 export function AppSidebar() {
@@ -28,59 +38,51 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
 
+  const renderGroup = (label: string, items: typeof mainItems) => (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-muted-foreground/60 text-xs uppercase tracking-wider">{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                <NavLink to={item.url} end className="transition-all duration-200" activeClassName="bg-primary/10 text-primary">
+                  <item.icon className="h-4 w-4" />
+                  {!collapsed && <span>{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Wand2 className="h-4 w-4 text-primary-foreground" />
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-primary-foreground font-bold text-sm">U</span>
+          </div>
+          {!collapsed && (
+            <div className="flex flex-col">
+              <span className="font-display font-bold text-xs gradient-text leading-tight">ULTRA MEDIA</span>
+              <span className="font-display font-bold text-[10px] text-muted-foreground leading-tight">AI HUB</span>
             </div>
-            <span className="font-display font-bold text-sm gradient-text">ULTRA MEDIA AI HUB</span>
-          </div>
-        )}
-        {collapsed && (
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-            <Wand2 className="h-4 w-4 text-primary-foreground" />
-          </div>
-        )}
+          )}
+        </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground/60 text-xs uppercase tracking-wider">Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <NavLink to={item.url} end className="transition-colors" activeClassName="bg-primary/10 text-primary">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground/60 text-xs uppercase tracking-wider">Legal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {legalItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <NavLink to={item.url} end className="transition-colors" activeClassName="bg-primary/10 text-primary">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderGroup("Tools", mainItems)}
+        {renderGroup("Company", companyItems)}
+        {renderGroup("Legal", legalItems)}
       </SidebarContent>
+      {!collapsed && (
+        <div className="p-4 border-t border-border/30">
+          <p className="text-[10px] text-muted-foreground/50 text-center">MUTECH BAAR v2.0</p>
+        </div>
+      )}
     </Sidebar>
   );
 }
