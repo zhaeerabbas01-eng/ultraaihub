@@ -12,34 +12,34 @@
     --card-foreground: 220 20% 92%;
     --popover: 230 20% 12%;
     --popover-foreground: 220 20% 92%;
-    --primary: 265 90% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 160 100% 50%;
+    --primary-foreground: 230 25% 7%;
     --secondary: 230 18% 18%;
     --secondary-foreground: 220 20% 85%;
     --muted: 230 15% 15%;
     --muted-foreground: 220 10% 55%;
-    --accent: 175 80% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 160 100% 50%;
+    --accent-foreground: 230 25% 7%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
     --border: 230 15% 20%;
     --input: 230 15% 20%;
-    --ring: 265 90% 60%;
+    --ring: 160 100% 50%;
     --radius: 0.75rem;
     --sidebar-background: 230 22% 9%;
     --sidebar-foreground: 220 15% 70%;
-    --sidebar-primary: 265 90% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 160 100% 50%;
+    --sidebar-primary-foreground: 230 25% 7%;
     --sidebar-accent: 230 18% 16%;
     --sidebar-accent-foreground: 220 20% 92%;
     --sidebar-border: 230 15% 16%;
-    --sidebar-ring: 265 90% 60%;
+    --sidebar-ring: 160 100% 50%;
     --glass: 230 20% 12%;
     --glass-border: 230 15% 22%;
-    --gradient-primary: linear-gradient(135deg, hsl(265 90% 60%), hsl(200 90% 55%));
-    --gradient-accent: linear-gradient(135deg, hsl(175 80% 45%), hsl(200 90% 55%));
+    --gradient-primary: linear-gradient(135deg, hsl(160 100% 50%), hsl(120 80% 45%));
+    --gradient-accent: linear-gradient(135deg, hsl(160 100% 50%), hsl(200 90% 55%));
     --gradient-card: linear-gradient(145deg, hsl(230 20% 14%), hsl(230 20% 10%));
-    --shadow-glow: 0 0 40px -10px hsl(265 90% 60% / 0.3);
+    --shadow-glow: 0 0 40px -10px hsl(160 100% 50% / 0.3);
     --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.4);
   }
 }
@@ -88,6 +88,9 @@
     pointer-events: none;
   }
   .glow-sm {
-    box-shadow: 0 0 20px -5px hsl(265 90% 60% / 0.25);
+    box-shadow: 0 0 20px -5px hsl(160 100% 50% / 0.25);
+  }
+  .glow-lg {
+    box-shadow: 0 0 60px -10px hsl(160 100% 50% / 0.3);
   }
 }
