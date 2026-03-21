@@ -60,7 +60,36 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, prompt, title } = await req.json();
+    // Rate limiting by IP
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("cf-connecting-ip") || "unknown";
+    if (!checkRateLimit(clientIP)) {
+      return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate input
+    const body = await req.json();
+    const { action, prompt, title } = body;
+
+    if (!action || typeof action !== "string") {
+      return new Response(JSON.stringify({ error: "Missing or invalid action" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate prompt/title length to prevent abuse
+    if (prompt && typeof prompt === "string" && prompt.length > 5000) {
+      return new Response(JSON.stringify({ error: "Input too long (max 5000 chars)" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (title && typeof title === "string" && title.length > 500) {
+      return new Response(JSON.stringify({ error: "Title too long (max 500 chars)" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "thumbnail-suggestions") {
       const text = await callAI([
