@@ -22,7 +22,26 @@ function isRateLimited(ip: string): boolean {
   return entry.count > RATE_LIMIT;
 }
 
-function extractChannelIdentifier(input: string): { type: "id" | "handle" | "username"; value: string } | null {
+function extractVideoId(input: string): string | null {
+  const trimmed = input.trim();
+  // youtu.be/VIDEO_ID
+  const shortMatch = trimmed.match(/youtu\.be\/([\w-]{11})/);
+  if (shortMatch) return shortMatch[1];
+  // youtube.com/watch?v=VIDEO_ID
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname.includes("youtube.com")) {
+      const v = url.searchParams.get("v");
+      if (v && /^[\w-]{11}$/.test(v)) return v;
+      // youtube.com/shorts/VIDEO_ID or /embed/VIDEO_ID
+      const pathMatch = url.pathname.match(/^\/(shorts|embed)\/([\w-]{11})/);
+      if (pathMatch) return pathMatch[2];
+    }
+  } catch { /* not a URL */ }
+  return null;
+}
+
+function extractChannelIdentifier(input: string): { type: "id" | "handle" | "username" | "video"; value: string } | null {
   const trimmed = input.trim();
 
   // Direct channel ID (starts with UC)
@@ -33,6 +52,12 @@ function extractChannelIdentifier(input: string): { type: "id" | "handle" | "use
   // @handle format
   if (trimmed.startsWith("@")) {
     return { type: "handle", value: trimmed };
+  }
+
+  // Check for video URL first (before generic URL parsing)
+  const videoId = extractVideoId(trimmed);
+  if (videoId) {
+    return { type: "video", value: videoId };
   }
 
   // URL patterns
@@ -54,7 +79,7 @@ function extractChannelIdentifier(input: string): { type: "id" | "handle" | "use
 
     // youtube.com/CustomName (legacy vanity URL)
     const vanityMatch = path.match(/^\/([\w.-]+)$/);
-    if (vanityMatch && !["watch", "feed", "playlist", "shorts", "results"].includes(vanityMatch[1])) {
+    if (vanityMatch && !["watch", "feed", "playlist", "shorts", "results", "embed"].includes(vanityMatch[1])) {
       return { type: "username", value: vanityMatch[1] };
     }
   } catch {
@@ -112,7 +137,20 @@ serve(async (req) => {
     const parts = "snippet,statistics,brandingSettings,contentDetails";
     let apiUrl: string;
 
-    if (identifier.type === "id") {
+    if (identifier.type === "video") {
+      // Resolve video to channel ID first
+      const videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(identifier.value)}&key=${YOUTUBE_API_KEY}`;
+      const videoRes = await fetch(videoUrl);
+      const videoData = await videoRes.json();
+      if (!videoRes.ok || !videoData.items?.length) {
+        return new Response(JSON.stringify({ error: "Video not found. Could not resolve channel." }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const channelId = videoData.items[0].snippet.channelId;
+      apiUrl = `${BASE}?part=${parts}&id=${channelId}&key=${YOUTUBE_API_KEY}`;
+    } else if (identifier.type === "id") {
       apiUrl = `${BASE}?part=${parts}&id=${encodeURIComponent(identifier.value)}&key=${YOUTUBE_API_KEY}`;
     } else if (identifier.type === "handle") {
       // Use search to resolve handle, then fetch channel
