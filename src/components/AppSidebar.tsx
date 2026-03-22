@@ -1,4 +1,4 @@
-import { Home, Download, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Youtube } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Youtube } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -8,7 +8,7 @@ import {
 
 const mainItems = [
   { title: "Home", url: "/", icon: Home },
-  { title: "Video Downloader", url: "/video-downloader", icon: Download },
+  { title: "YT Video Preview", url: "/video-downloader", icon: Youtube },
   { title: "Audio Converter", url: "/audio-converter", icon: Music },
   { title: "Image Tools", url: "/image-tools", icon: Image },
   { title: "AI Upscaler", url: "/upscaler", icon: Maximize },
