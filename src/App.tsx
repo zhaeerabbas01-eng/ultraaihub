@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
 import HomePage from "./pages/HomePage";
 import VideoDownloaderPage from "./pages/VideoDownloaderPage";
+import YouTubeChannelPage from "./pages/YouTubeChannelPage";
 import AudioConverterPage from "./pages/AudioConverterPage";
 import ImageToolsPage from "./pages/ImageToolsPage";
 import UpscalerPage from "./pages/UpscalerPage";
@@ -34,6 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/video-downloader" element={<VideoDownloaderPage />} />
+            <Route path="/youtube-channel" element={<YouTubeChannelPage />} />
             <Route path="/audio-converter" element={<AudioConverterPage />} />
             <Route path="/image-tools" element={<ImageToolsPage />} />
             <Route path="/upscaler" element={<UpscalerPage />} />
