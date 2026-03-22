@@ -137,7 +137,20 @@ serve(async (req) => {
     const parts = "snippet,statistics,brandingSettings,contentDetails";
     let apiUrl: string;
 
-    if (identifier.type === "id") {
+    if (identifier.type === "video") {
+      // Resolve video to channel ID first
+      const videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(identifier.value)}&key=${YOUTUBE_API_KEY}`;
+      const videoRes = await fetch(videoUrl);
+      const videoData = await videoRes.json();
+      if (!videoRes.ok || !videoData.items?.length) {
+        return new Response(JSON.stringify({ error: "Video not found. Could not resolve channel." }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const channelId = videoData.items[0].snippet.channelId;
+      apiUrl = `${BASE}?part=${parts}&id=${channelId}&key=${YOUTUBE_API_KEY}`;
+    } else if (identifier.type === "id") {
       apiUrl = `${BASE}?part=${parts}&id=${encodeURIComponent(identifier.value)}&key=${YOUTUBE_API_KEY}`;
     } else if (identifier.type === "handle") {
       // Use search to resolve handle, then fetch channel
