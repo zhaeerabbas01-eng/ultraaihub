@@ -16,6 +16,21 @@ serve(async (req) => {
     const imageFile = formData.get("image") as File;
     if (!imageFile) throw new Error("No image file provided");
 
+    // Validate MIME type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(imageFile.type)) {
+      return new Response(JSON.stringify({ error: "Unsupported image type. Allowed: JPEG, PNG, WEBP, GIF" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate file size (max 10 MB)
+    if (imageFile.size > 10 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: "Image too large (max 10 MB)" }), {
+        status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const removeBgForm = new FormData();
     removeBgForm.append("image_file", imageFile);
     removeBgForm.append("size", "auto");
