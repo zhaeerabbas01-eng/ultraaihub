@@ -8,7 +8,7 @@ import {
 
 const mainItems = [
   { title: "Home", url: "/", icon: Home },
-  { title: "YT Video Preview", url: "/video-downloader", icon: Youtube },
+  { title: "YT Video Extractor", url: "/video-downloader", icon: Play },
   { title: "Audio Converter", url: "/audio-converter", icon: Music },
   { title: "Image Tools", url: "/image-tools", icon: Image },
   { title: "AI Upscaler", url: "/upscaler", icon: Maximize },
