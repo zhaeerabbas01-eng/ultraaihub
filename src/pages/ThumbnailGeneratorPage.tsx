@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Wand2, Download, Loader2, Sparkles, Upload, Image as ImageIcon } from "lucide-react";
+import { Wand2, Download, Loader2, Sparkles, Upload, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +32,9 @@ export default function ThumbnailGeneratorPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiImageUrl, setAiImageUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("manual");
 
-  useEffect(() => { drawCanvas(); }, [title, subtitle, gradient, fontSize, bgImage]);
+  useEffect(() => { if (activeTab === "manual") drawCanvas(); }, [title, subtitle, gradient, fontSize, bgImage, activeTab]);
 
   const drawCanvas = () => {
     const canvas = canvasRef.current;
@@ -43,12 +44,10 @@ export default function ThumbnailGeneratorPage() {
     canvas.height = 720;
 
     if (bgImage) {
-      // Draw uploaded image as background
       const scale = Math.max(canvas.width / bgImage.width, canvas.height / bgImage.height);
       const w = bgImage.width * scale;
       const h = bgImage.height * scale;
       ctx.drawImage(bgImage, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-      // Dark overlay for text readability
       ctx.fillStyle = "rgba(0,0,0,0.4)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else {
@@ -78,12 +77,19 @@ export default function ThumbnailGeneratorPage() {
     ctx.shadowBlur = 15;
     ctx.fillText(subtitle, 640, 500);
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(440, 540);
-    ctx.lineTo(840, 540);
-    ctx.stroke();
+
+    // Watermark
+    addWatermark(ctx, canvas.width, canvas.height);
+  };
+
+  const addWatermark = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = "#fff";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText("MU Tech", w - 15, h - 12);
+    ctx.restore();
   };
 
   const wrapText = (ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) => {
@@ -105,10 +111,7 @@ export default function ThumbnailGeneratorPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const img = new Image();
-    img.onload = () => {
-      setBgImage(img);
-      toast.success("Background image set!");
-    };
+    img.onload = () => { setBgImage(img); toast.success("Background image set!"); };
     img.src = URL.createObjectURL(file);
   };
 
@@ -119,55 +122,33 @@ export default function ThumbnailGeneratorPage() {
         body: { action: "enhance-text", prompt: title },
       });
       if (error) throw error;
-      if (data?.text) {
-        setTitle(data.text);
-        toast.success("Title enhanced with AI!");
-      }
-    } catch {
-      toast.error("AI enhancement failed.");
-    }
+      if (data?.text) { setTitle(data.text); toast.success("Title enhanced with AI!"); }
+    } catch { toast.error("AI enhancement failed."); }
     setAiLoading(false);
   };
 
-  const handleAiSuggestions = async () => {
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("ai-generate", {
-        body: { action: "thumbnail-suggestions", title },
-      });
-      if (error) throw error;
-      if (data?.suggestions?.length > 0) {
-        const suggestion = data.suggestions[0];
-        if (suggestion.textOverlay) setTitle(suggestion.textOverlay);
-        if (suggestion.fontSize) setFontSize(String(suggestion.fontSize));
-        toast.success("AI thumbnail concept applied!");
-      }
-    } catch {
-      toast.error("AI suggestions failed.");
-    }
-    setAiLoading(false);
-  };
-
-  const handleAiGenerateImage = async () => {
-    if (!aiPrompt.trim()) { toast.error("Enter a prompt for AI image generation"); return; }
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim()) { toast.error("Enter a prompt for AI thumbnail generation"); return; }
     setAiGenerating(true);
+    setAiImageUrl(null);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-generate", {
-        body: { action: "generate-thumbnail-image", prompt: aiPrompt },
+      const { data, error } = await supabase.functions.invoke("ai-thumbnail-generate", {
+        body: { prompt: aiPrompt },
       });
       if (error) throw error;
-      if (data?.imageDescription) {
-        // Use the AI description to set the title and suggest a concept
-        setTitle(data.imageDescription);
-        toast.success("AI generated thumbnail concept! Customize further with the controls.");
+      if (data?.imageUrl) {
+        setAiImageUrl(data.imageUrl);
+        toast.success("AI thumbnail generated!");
+      } else {
+        throw new Error("No image returned");
       }
-    } catch {
-      toast.error("AI image generation failed.");
+    } catch (err: any) {
+      toast.error(err.message || "AI generation failed. Try again.");
     }
     setAiGenerating(false);
   };
 
-  const handleDownload = () => {
+  const downloadManual = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
@@ -176,18 +157,27 @@ export default function ThumbnailGeneratorPage() {
     link.click();
   };
 
+  const downloadAiImage = () => {
+    if (!aiImageUrl) return;
+    const link = document.createElement("a");
+    link.download = "ai-thumbnail.png";
+    link.href = aiImageUrl;
+    link.click();
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
-      <PageHeader icon={<Wand2 className="h-5 w-5" />} title="AI Thumbnail Generator" description="Create thumbnails with AI, custom images, gradients, and text overlays." />
-      <div className="grid md:grid-cols-3 gap-4">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-panel rounded-xl p-5 space-y-4">
-          <Tabs defaultValue="text" className="w-full">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="text" className="text-xs">Text & Style</TabsTrigger>
-              <TabsTrigger value="ai" className="text-xs">AI Generate</TabsTrigger>
-            </TabsList>
+      <PageHeader icon={<Wand2 className="h-5 w-5" />} title="AI Thumbnail Generator" description="Create stunning YouTube thumbnails with AI or manual editor." />
 
-            <TabsContent value="text" className="space-y-3 mt-3">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full grid grid-cols-2 mb-6">
+          <TabsTrigger value="manual" className="gap-2"><Wand2 className="h-4 w-4" /> Manual Mode</TabsTrigger>
+          <TabsTrigger value="ai" className="gap-2"><Sparkles className="h-4 w-4" /> AI Generate Mode</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="manual">
+          <div className="grid md:grid-cols-3 gap-4">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-panel rounded-xl p-5 space-y-4">
               <div>
                 <label className="text-xs text-muted-foreground">Title</label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} className="mt-1 bg-secondary border-border" />
@@ -208,21 +198,19 @@ export default function ThumbnailGeneratorPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Upload Background Image</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Background Image</label>
                 <label className="flex items-center gap-2 cursor-pointer glass-panel rounded-lg p-2 hover:bg-secondary/50 transition text-sm text-muted-foreground">
                   <Upload className="h-4 w-4" />
                   {bgImage ? "Change Image" : "Choose Image"}
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
                 {bgImage && (
-                  <Button variant="ghost" size="sm" onClick={() => setBgImage(null)} className="mt-1 text-xs text-muted-foreground">
-                    Remove Image
-                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setBgImage(null)} className="mt-1 text-xs text-muted-foreground">Remove</Button>
                 )}
               </div>
               {!bgImage && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">Background Gradient</label>
+                  <label className="text-xs text-muted-foreground mb-2 block">Gradient</label>
                   <div className="grid grid-cols-4 gap-2">
                     {gradients.map((g, i) => (
                       <button key={i} onClick={() => setGradient(i)} className={`h-8 rounded-lg transition-all ${gradient === i ? "ring-2 ring-primary scale-110" : "hover:scale-105"}`} style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` }} />
@@ -230,43 +218,69 @@ export default function ThumbnailGeneratorPage() {
                   </div>
                 </div>
               )}
-            </TabsContent>
-
-            <TabsContent value="ai" className="space-y-3 mt-3">
-              <div>
-                <label className="text-xs text-muted-foreground">AI Prompt</label>
-                <Textarea 
-                  value={aiPrompt} 
-                  onChange={e => setAiPrompt(e.target.value)} 
-                  placeholder="Describe thumbnail: e.g. 'Gaming video with explosion effects'" 
-                  className="mt-1 bg-secondary border-border min-h-[80px]" 
-                />
-              </div>
-              <Button onClick={handleAiGenerateImage} disabled={aiGenerating} className="w-full bg-primary hover:bg-primary/90">
-                {aiGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
-                Generate with AI
+              <Button onClick={handleAiEnhance} disabled={aiLoading} variant="outline" size="sm" className="w-full border-primary/50 text-primary hover:bg-primary/10">
+                {aiLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                AI Enhance Title
               </Button>
-              <div className="border-t border-border pt-3 space-y-2">
-                <Button onClick={handleAiEnhance} disabled={aiLoading} variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" size="sm">
-                  {aiLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                  AI Enhance Title
-                </Button>
-                <Button onClick={handleAiSuggestions} disabled={aiLoading} variant="outline" className="w-full border-accent/50 text-accent hover:bg-accent/10" size="sm">
-                  {aiLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-                  AI Suggest Concept
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+              <Button onClick={downloadManual} className="w-full bg-primary hover:bg-primary/90">
+                <Download className="h-4 w-4 mr-2" /> Export PNG
+              </Button>
+            </motion.div>
 
-          <Button onClick={handleDownload} className="w-full bg-primary hover:bg-primary/90">
-            <Download className="h-4 w-4 mr-2" /> Export PNG
-          </Button>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="md:col-span-2">
-          <canvas ref={canvasRef} className="w-full rounded-xl shadow-lg" style={{ aspectRatio: "16/9" }} />
-        </motion.div>
-      </div>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="md:col-span-2">
+              <canvas ref={canvasRef} className="w-full rounded-xl shadow-lg" style={{ aspectRatio: "16/9" }} />
+            </motion.div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ai">
+          <div className="grid md:grid-cols-3 gap-4">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-panel rounded-xl p-5 space-y-4">
+              <div>
+                <label className="text-xs text-muted-foreground">Describe your thumbnail</label>
+                <Textarea
+                  value={aiPrompt}
+                  onChange={e => setAiPrompt(e.target.value)}
+                  placeholder='e.g. "man shocked face" or "gaming explosion thumbnail"'
+                  className="mt-1 bg-secondary border-border min-h-[120px]"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Simple prompts are auto-enhanced for best results</p>
+              </div>
+              <Button onClick={handleAiGenerate} disabled={aiGenerating} className="w-full bg-primary hover:bg-primary/90">
+                {aiGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+                {aiGenerating ? "Generating..." : "Generate Thumbnail"}
+              </Button>
+              {aiImageUrl && (
+                <>
+                  <Button onClick={handleAiGenerate} disabled={aiGenerating} variant="outline" className="w-full gap-2">
+                    <RefreshCw className="h-4 w-4" /> Regenerate
+                  </Button>
+                  <Button onClick={downloadAiImage} className="w-full bg-primary hover:bg-primary/90">
+                    <Download className="h-4 w-4 mr-2" /> Download HD
+                  </Button>
+                </>
+              )}
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="md:col-span-2">
+              {aiImageUrl ? (
+                <div className="rounded-xl overflow-hidden shadow-lg relative">
+                  <img src={aiImageUrl} alt="AI Generated Thumbnail" className="w-full aspect-video object-cover" />
+                  <div className="absolute bottom-2 right-3 text-white/30 text-[10px] font-medium">MU Tech</div>
+                </div>
+              ) : (
+                <div className="w-full aspect-video rounded-xl bg-secondary/50 border border-border/50 flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">Enter a prompt and click Generate</p>
+                    <p className="text-xs mt-1 opacity-60">AI will create a high-quality YouTube thumbnail</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Youtube } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Youtube, Play } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -8,7 +8,7 @@ import {
 
 const mainItems = [
   { title: "Home", url: "/", icon: Home },
-  { title: "YT Video Preview", url: "/video-downloader", icon: Youtube },
+  { title: "YT Video Extractor", url: "/video-downloader", icon: Play },
   { title: "Audio Converter", url: "/audio-converter", icon: Music },
   { title: "Image Tools", url: "/image-tools", icon: Image },
   { title: "AI Upscaler", url: "/upscaler", icon: Maximize },
@@ -16,7 +16,7 @@ const mainItems = [
   { title: "AI Thumbnail", url: "/thumbnail-generator", icon: Wand2 },
   { title: "Video Tools", url: "/video-tools", icon: Scissors },
   { title: "BG Remover", url: "/bg-remover", icon: Image },
-  { title: "YT Channel Lookup", url: "/youtube-channel", icon: Youtube },
+  { title: "YT Transcript", url: "/youtube-channel", icon: FileText },
 ];
 
 const companyItems = [
