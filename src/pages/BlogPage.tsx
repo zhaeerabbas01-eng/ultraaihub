@@ -23,11 +23,6 @@ export default function BlogPage() {
   if (post) {
     return (
       <div className="max-w-3xl mx-auto">
-        <Helmet>
-          <title>{post.title} | Ultra Media AI Hub</title>
-          <meta name="description" content={post.metaDescription} />
-          <meta name="keywords" content={post.keywords.join(", ")} />
-        </Helmet>
         <button onClick={() => setSelectedPost(null)} className="flex items-center gap-2 text-primary text-sm mb-6 hover:underline">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Blog
         </button>
