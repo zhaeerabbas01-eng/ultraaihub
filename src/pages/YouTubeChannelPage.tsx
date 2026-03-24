@@ -26,7 +26,13 @@ export default function TranscriptPage() {
       const { data, error: fnError } = await supabase.functions.invoke("youtube-transcript", {
         body: { url: url.trim() },
       });
-      if (fnError) throw fnError;
+      if (fnError) {
+        // Try to parse error body for user-friendly message
+        const msg = typeof fnError === 'object' && fnError.message ? fnError.message : String(fnError);
+        setError(msg.includes("non-2xx") ? "Transcript not available for this video. The video may not have captions enabled." : msg);
+        setLoading(false);
+        return;
+      }
       if (data?.error) {
         setError(data.error);
       } else {
