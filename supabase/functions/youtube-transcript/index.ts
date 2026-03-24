@@ -41,43 +41,53 @@ serve(async (req) => {
       });
     }
 
-    // Fetch video page to get caption tracks
-    const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept-Language": "*" },
-    });
-    const pageHtml = await pageRes.text();
-
-    // Extract video title
-    const titleMatch = pageHtml.match(/<title>(.+?)<\/title>/);
-    let title = titleMatch ? titleMatch[1].replace(" - YouTube", "").trim() : "";
-
-    // Try to get title from YouTube API if available
     const YOUTUBE_API_KEY = Deno.env.get("YOUTUBE_API_KEY");
+    let title = "";
+
+    // Get video title via API
     if (YOUTUBE_API_KEY) {
       try {
-        const apiRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`);
+        const apiRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+        );
         const apiData = await apiRes.json();
         if (apiData.items?.[0]) {
-          title = apiData.items[0].snippet.title || title;
+          title = apiData.items[0].snippet.title || "";
         }
       } catch {}
     }
 
-    // Extract captions from player response
-    const playerMatch = pageHtml.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
-    if (!playerMatch) {
-      return new Response(JSON.stringify({ error: "Transcript not available for this video. The video may have captions disabled." }), {
+    // Use YouTube's innertube API to get player response (more reliable than scraping)
+    const innertubeRes = await fetch("https://www.youtube.com/youtubei/v1/player", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+      body: JSON.stringify({
+        videoId,
+        context: {
+          client: {
+            clientName: "WEB",
+            clientVersion: "2.20240101.00.00",
+            hl: "en",
+          },
+        },
+      }),
+    });
+
+    if (!innertubeRes.ok) {
+      console.error("Innertube API failed:", innertubeRes.status);
+      return new Response(JSON.stringify({ error: "Transcript not available for this video." }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    let playerResponse: any;
-    try {
-      playerResponse = JSON.parse(playerMatch[1]);
-    } catch {
-      return new Response(JSON.stringify({ error: "Transcript not available for this video." }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const playerResponse = await innertubeRes.json();
+
+    // Get title from player response if not from API
+    if (!title) {
+      title = playerResponse?.videoDetails?.title || "";
     }
 
     const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
@@ -94,6 +104,11 @@ serve(async (req) => {
 
     // Fetch the timed text XML
     const captionRes = await fetch(captionUrl);
+    if (!captionRes.ok) {
+      return new Response(JSON.stringify({ error: "Failed to fetch transcript data." }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const captionXml = await captionRes.text();
 
     // Parse XML to extract text
