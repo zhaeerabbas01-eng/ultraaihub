@@ -60,10 +60,6 @@ export default function BlogPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Helmet>
-        <title>Blog — Free Media Tools Tips & Guides | Ultra Media AI Hub</title>
-        <meta name="description" content="Tips, guides, and tutorials for YouTube tools, audio conversion, image processing, and AI-powered media tools. SEO-optimized articles updated for 2026." />
-      </Helmet>
       <PageHeader icon={<BookOpen className="h-5 w-5" />} title="Blog" description="Tips, guides, and tutorials for YouTube tools, audio conversion, image processing, and AI-powered media tools." />
 
       {/* Search & Filter */}
