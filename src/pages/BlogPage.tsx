@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { blogArticles } from "@/data/blogArticles";
-import { Helmet } from "react-helmet-async";
 
 const categories = ["All", ...Array.from(new Set(blogArticles.map(a => a.category)))];
 
