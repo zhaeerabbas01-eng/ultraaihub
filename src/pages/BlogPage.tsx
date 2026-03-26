@@ -24,7 +24,7 @@ export default function BlogPage() {
     document.title = post ? `${post.title} | Ultra Media AI Hub` : "Blog — Free Media Tools Tips & Guides | Ultra Media AI Hub";
   }, [post]);
 
-
+  if (post) {
     return (
       <div className="max-w-3xl mx-auto">
         <button onClick={() => setSelectedPost(null)} className="flex items-center gap-2 text-primary text-sm mb-6 hover:underline">
