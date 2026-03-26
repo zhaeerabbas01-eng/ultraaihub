@@ -17,7 +17,6 @@ const mainItems = [
   { title: "AI Thumbnail", url: "/thumbnail-generator", icon: Wand2 },
   { title: "Video Tools", url: "/video-tools", icon: Scissors },
   { title: "BG Remover", url: "/bg-remover", icon: Image },
-  { title: "YT Transcript", url: "/youtube-channel", icon: FileText },
 ];
 
 const companyItems = [
