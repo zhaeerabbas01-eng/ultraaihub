@@ -108,7 +108,6 @@ export const blogArticles: BlogArticle[] = [
 <p>The YouTube Video Extractor by Ultra Media AI Hub is the fastest, simplest way to grab thumbnails, titles, and descriptions from any YouTube video. Built for creators, marketers, and researchers, it delivers instant results with zero hassle. Try it today and supercharge your YouTube workflow!</p>`,
   },
   {
-    slug: "youtube-transcript-extractor-free-2026",
     title: "YouTube Transcript Extractor: Get Video Transcripts Free Online",
     metaDescription: "Extract YouTube video transcripts instantly in the original language. Free online transcript extractor — no signup. Copy full transcripts with one click.",
     focusKeyword: "YouTube transcript extractor",

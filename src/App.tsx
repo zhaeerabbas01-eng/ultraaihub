@@ -35,7 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/video-downloader" element={<VideoDownloaderPage />} />
-            <Route path="/youtube-channel" element={<YouTubeChannelPage />} />
+            
             <Route path="/audio-converter" element={<AudioConverterPage />} />
             <Route path="/image-tools" element={<ImageToolsPage />} />
             <Route path="/upscaler" element={<UpscalerPage />} />

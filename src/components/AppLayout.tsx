@@ -13,6 +13,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <header className="h-14 flex items-center justify-between border-b border-border/50 px-4 glass-panel sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+              <img src={logoImg} alt="Ultra Media AI Hub" className="h-7 w-7 rounded-md object-cover hidden sm:block" />
               <span className="font-display text-sm font-semibold gradient-text hidden sm:inline">ULTRA MEDIA AI HUB</span>
             </div>
             <nav className="hidden md:flex items-center gap-4 text-sm">

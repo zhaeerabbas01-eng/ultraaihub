@@ -63,9 +63,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">U</span>
-          </div>
+          <img src={logoImg} alt="Ultra Media AI Hub" className="h-8 w-8 rounded-lg flex-shrink-0 object-cover" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-display font-bold text-xs gradient-text leading-tight">ULTRA MEDIA</span>
