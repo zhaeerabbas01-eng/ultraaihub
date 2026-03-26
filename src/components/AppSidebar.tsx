@@ -1,10 +1,11 @@
-import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Youtube, Play } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
+import logoImg from "@/assets/logo.png";
 
 const mainItems = [
   { title: "Home", url: "/", icon: Home },
@@ -16,7 +17,6 @@ const mainItems = [
   { title: "AI Thumbnail", url: "/thumbnail-generator", icon: Wand2 },
   { title: "Video Tools", url: "/video-tools", icon: Scissors },
   { title: "BG Remover", url: "/bg-remover", icon: Image },
-  { title: "YT Transcript", url: "/youtube-channel", icon: FileText },
 ];
 
 const companyItems = [
@@ -63,9 +63,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">U</span>
-          </div>
+          <img src={logoImg} alt="Ultra Media AI Hub" className="h-8 w-8 rounded-lg flex-shrink-0 object-cover" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-display font-bold text-xs gradient-text leading-tight">ULTRA MEDIA</span>

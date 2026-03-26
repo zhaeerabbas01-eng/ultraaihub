@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://ultramediaaihub.lovable.app/</loc><priority>1.0</priority></url>
   <url><loc>https://ultramediaaihub.lovable.app/video-downloader</loc><priority>0.9</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/youtube-channel</loc><priority>0.9</priority></url>
+  
   <url><loc>https://ultramediaaihub.lovable.app/audio-converter</loc><priority>0.9</priority></url>
   <url><loc>https://ultramediaaihub.lovable.app/image-tools</loc><priority>0.9</priority></url>
   <url><loc>https://ultramediaaihub.lovable.app/upscaler</loc><priority>0.8</priority></url>
