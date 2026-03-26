@@ -19,13 +19,13 @@ function checkRateLimit(ip: string): boolean {
   return entry.count <= 10;
 }
 
-function enhancePrompt(simple: string): string {
+function enhancePrompt(simple: string, size?: string): string {
   const base = simple.trim().toLowerCase();
-  // If prompt is already detailed (>50 chars), use as-is with some enhancement
+  const sizeHint = size ? `, ${size} aspect ratio` : "";
   if (base.length > 50) {
-    return `${simple}. YouTube thumbnail style, ultra high quality, 4K, vibrant colors, high contrast, sharp focus, professional composition, click-worthy`;
+    return `${simple}${sizeHint}. YouTube thumbnail style, ultra high quality, 4K, vibrant colors, high contrast, sharp focus, professional composition, click-worthy`;
   }
-  return `Highly detailed cinematic YouTube thumbnail of ${simple}, dramatic lighting, vibrant saturated colors, high contrast, ultra realistic, 4K quality, expressive and engaging, sharp focus, professional composition, viral YouTube style, click-worthy thumbnail design`;
+  return `Highly detailed cinematic YouTube thumbnail of ${simple}${sizeHint}, dramatic lighting, vibrant saturated colors, high contrast, ultra realistic, 4K quality, expressive and engaging, sharp focus, professional composition, viral YouTube style, click-worthy thumbnail design`;
 }
 
 serve(async (req) => {
@@ -40,7 +40,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt } = await req.json();
+    const { prompt, referenceImage, size } = await req.json();
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Please provide a prompt." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -55,8 +55,20 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("API key not configured");
 
-    const enhancedPrompt = enhancePrompt(prompt);
+    const enhancedPrompt = enhancePrompt(prompt, size);
     console.log("Enhanced prompt:", enhancedPrompt);
+
+    // Build message content - text only or multimodal with reference image
+    const userContent: any[] = [{ type: "text", text: enhancedPrompt }];
+
+    if (referenceImage && typeof referenceImage === "string") {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: referenceImage },
+      });
+      // Prepend editing instruction
+      userContent[0].text = `Using the provided reference image as inspiration, create a new thumbnail: ${enhancedPrompt}`;
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -69,7 +81,7 @@ serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: enhancedPrompt,
+            content: userContent.length === 1 ? enhancedPrompt : userContent,
           },
         ],
         modalities: ["image", "text"],
