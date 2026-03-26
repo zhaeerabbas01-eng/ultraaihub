@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Footer } from "@/components/Footer";
 import { Link } from "react-router-dom";
+import logoImg from "@/assets/logo.png";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
