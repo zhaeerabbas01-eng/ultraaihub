@@ -1,10 +1,11 @@
-import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, FileText, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Youtube, Play } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
+import logoImg from "@/assets/logo.png";
 
 const mainItems = [
   { title: "Home", url: "/", icon: Home },
