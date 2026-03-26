@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Download, Music, Image, Maximize, Minimize2, Wand2, Scissors, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 
 const tools = [
   { title: "Video Downloader", desc: "Download from YouTube, TikTok, Facebook, Instagram", icon: Download, url: "/video-downloader", color: "from-red-500/20 to-orange-500/20" },
