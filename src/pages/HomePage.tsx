@@ -40,6 +40,7 @@ export default function HomePage() {
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-sm text-primary font-medium">AI-Powered Media Processing</span>
         </motion.div>
+        <motion.img src={logoImg} alt="Ultra Media AI Hub Logo" className="h-24 w-24 md:h-32 md:w-32 mx-auto mb-6 rounded-2xl object-cover" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 }} />
         <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-bold mb-6 leading-tight">
           <span className="text-foreground">ULTRA</span><br />
           <span className="gradient-text">MEDIA AI HUB</span>
