@@ -1,0 +1,154 @@
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  images?: string[];
+  files?: { name: string; type: string; content: string }[];
+  timestamp: Date;
+};
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+
+export async function streamChat({
+  messages,
+  tool,
+  onDelta,
+  onDone,
+  onError,
+  signal,
+}: {
+  messages: { role: string; content: string | any[] }[];
+  tool?: string;
+  onDelta: (text: string) => void;
+  onDone: () => void;
+  onError: (error: string) => void;
+  signal?: AbortSignal;
+}) {
+  try {
+    const resp = await fetch(CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ messages, tool }),
+      signal,
+    });
+
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({ error: "Request failed" }));
+      onError(data.error || `Error ${resp.status}`);
+      return;
+    }
+
+    if (!resp.body) {
+      onError("No response stream");
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex: number;
+      while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+        let line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (line.startsWith(":") || line.trim() === "") continue;
+        if (!line.startsWith("data: ")) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") {
+          onDone();
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) onDelta(content);
+        } catch {
+          buffer = line + "\n" + buffer;
+          break;
+        }
+      }
+    }
+
+    // Flush remaining
+    if (buffer.trim()) {
+      for (let raw of buffer.split("\n")) {
+        if (!raw || raw.startsWith(":") || raw.trim() === "") continue;
+        if (!raw.startsWith("data: ")) continue;
+        const jsonStr = raw.slice(6).trim();
+        if (jsonStr === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) onDelta(content);
+        } catch {}
+      }
+    }
+
+    onDone();
+  } catch (e: any) {
+    if (e.name === "AbortError") {
+      onDone();
+    } else {
+      onError(e.message || "Network error");
+    }
+  }
+}
+
+// Detect tool intent from user message
+export function detectTool(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  
+  // YouTube detection
+  if (
+    lower.includes("youtube.com") || lower.includes("youtu.be") ||
+    lower.includes("summarize this video") || lower.includes("youtube video") ||
+    lower.includes("extract youtube") || lower.includes("yt video")
+  ) {
+    return "youtube";
+  }
+
+  // Article writing
+  if (
+    lower.includes("write an article") || lower.includes("seo article") ||
+    lower.includes("write article") || lower.includes("generate article")
+  ) {
+    return "article";
+  }
+
+  // Blog writing
+  if (
+    lower.includes("write a blog") || lower.includes("blog post") ||
+    lower.includes("write blog") || lower.includes("blogger")
+  ) {
+    return "blog";
+  }
+
+  return undefined;
+}
+
+// Extract YouTube video ID
+export function extractYouTubeId(text: string): string | null {
+  const patterns = [
+    /youtu\.be\/([\w-]{11})/,
+    /youtube\.com\/watch\?v=([\w-]{11})/,
+    /youtube\.com\/shorts\/([\w-]{11})/,
+    /youtube\.com\/embed\/([\w-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
