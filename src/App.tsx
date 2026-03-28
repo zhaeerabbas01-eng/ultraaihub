@@ -13,6 +13,7 @@ import CompressorPage from "./pages/CompressorPage";
 import ThumbnailGeneratorPage from "./pages/ThumbnailGeneratorPage";
 import VideoToolsPage from "./pages/VideoToolsPage";
 import BgRemoverPage from "./pages/BgRemoverPage";
+import AIChatPage from "./pages/AIChatPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import AboutPage from "./pages/AboutPage";
