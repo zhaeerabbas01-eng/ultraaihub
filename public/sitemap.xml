@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://ultramediaaihub.lovable.app/</loc><priority>1.0</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/video-downloader</loc><priority>0.9</priority></url>
-  
-  <url><loc>https://ultramediaaihub.lovable.app/audio-converter</loc><priority>0.9</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/image-tools</loc><priority>0.9</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/upscaler</loc><priority>0.8</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/compressor</loc><priority>0.8</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/thumbnail-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/video-tools</loc><priority>0.8</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/bg-remover</loc><priority>0.8</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/blog</loc><priority>0.8</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/about</loc><priority>0.5</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/contact</loc><priority>0.5</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/help</loc><priority>0.5</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/privacy</loc><priority>0.3</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/terms</loc><priority>0.3</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/cookies</loc><priority>0.3</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/gdpr</loc><priority>0.3</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/disclaimer</loc><priority>0.3</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/video-downloader</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/audio-converter</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/image-tools</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/upscaler</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/compressor</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/thumbnail-generator</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/video-tools</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/bg-remover</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/blog</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/help</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/cookies</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/gdpr</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultramediaaihub.lovable.app/disclaimer</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
