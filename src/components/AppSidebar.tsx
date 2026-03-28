@@ -9,7 +9,6 @@ import logoImg from "@/assets/logo.png";
 
 const mainItems = [
   { title: "Home", url: "/", icon: Home },
-  { title: "AI Chat", url: "/ai-chat", icon: Bot },
   { title: "YT Video Extractor", url: "/video-downloader", icon: Play },
   { title: "Audio Converter", url: "/audio-converter", icon: Music },
   { title: "Image Tools", url: "/image-tools", icon: Image },
