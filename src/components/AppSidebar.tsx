@@ -1,4 +1,4 @@
-import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText, Bot } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
