@@ -13,7 +13,6 @@ import CompressorPage from "./pages/CompressorPage";
 import ThumbnailGeneratorPage from "./pages/ThumbnailGeneratorPage";
 import VideoToolsPage from "./pages/VideoToolsPage";
 import BgRemoverPage from "./pages/BgRemoverPage";
-import AIChatPage from "./pages/AIChatPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import AboutPage from "./pages/AboutPage";
@@ -44,7 +43,6 @@ const App = () => (
             <Route path="/thumbnail-generator" element={<ThumbnailGeneratorPage />} />
             <Route path="/video-tools" element={<VideoToolsPage />} />
             <Route path="/bg-remover" element={<BgRemoverPage />} />
-            <Route path="/ai-chat" element={<AIChatPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/about" element={<AboutPage />} />
