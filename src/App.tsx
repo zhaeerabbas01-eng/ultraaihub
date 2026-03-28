@@ -44,6 +44,7 @@ const App = () => (
             <Route path="/thumbnail-generator" element={<ThumbnailGeneratorPage />} />
             <Route path="/video-tools" element={<VideoToolsPage />} />
             <Route path="/bg-remover" element={<BgRemoverPage />} />
+            <Route path="/ai-chat" element={<AIChatPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/about" element={<AboutPage />} />
