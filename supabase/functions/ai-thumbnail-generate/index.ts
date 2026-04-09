@@ -80,9 +80,9 @@ serve(async (req) => {
       }
     }
 
-    // Use Gemini API with gemini-2.0-flash-exp-image-generation for image generation
+    // Use a currently supported Gemini image-generation model
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,6 +98,8 @@ serve(async (req) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error("Gemini API error:", response.status, errText);
+      if (response.status === 404) throw new Error("Image model not found or unavailable. The model endpoint was updated.");
+      if (response.status === 410) throw new Error("Image model deprecated. Please try again in a moment.");
       if (response.status === 429) throw new Error("Rate limited by Gemini. Please try again later.");
       if (response.status === 403) throw new Error("Invalid Gemini API key. Please update your key.");
       throw new Error(`Generation failed (${response.status})`);
@@ -106,14 +108,13 @@ serve(async (req) => {
     const data = await response.json();
     console.log("Gemini response structure:", JSON.stringify(data).substring(0, 500));
 
-    // Extract image from Gemini response
     let imageUrl: string | null = null;
     const candidates = data.candidates;
     if (candidates && candidates.length > 0) {
       const content = candidates[0].content;
-      if (content && content.parts) {
+      if (content?.parts) {
         for (const part of content.parts) {
-          if (part.inlineData) {
+          if (part.inlineData?.data) {
             const mimeType = part.inlineData.mimeType || "image/png";
             imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
             break;
