@@ -52,52 +52,75 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("API key not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("Gemini API key not configured");
 
     const enhancedPrompt = enhancePrompt(prompt, size);
     console.log("Enhanced prompt:", enhancedPrompt);
 
-    // Build message content - text only or multimodal with reference image
-    const userContent: any[] = [{ type: "text", text: enhancedPrompt }];
-
+    // Build prompt text
+    let finalPrompt = enhancedPrompt;
     if (referenceImage && typeof referenceImage === "string") {
-      userContent.push({
-        type: "image_url",
-        image_url: { url: referenceImage },
-      });
-      // Prepend editing instruction
-      userContent[0].text = `Using the provided reference image as inspiration, create a new thumbnail: ${enhancedPrompt}`;
+      finalPrompt = `Using the provided reference image as inspiration, create a new thumbnail: ${enhancedPrompt}`;
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
-        messages: [
-          {
-            role: "user",
-            content: userContent.length === 1 ? enhancedPrompt : userContent,
+    // Build request parts
+    const parts: any[] = [{ text: finalPrompt }];
+
+    if (referenceImage && typeof referenceImage === "string") {
+      // Extract base64 data and mime type from data URL
+      const match = referenceImage.match(/^data:(.+?);base64,(.+)$/);
+      if (match) {
+        parts.push({
+          inlineData: {
+            mimeType: match[1],
+            data: match[2],
           },
-        ],
-        modalities: ["image", "text"],
-      }),
-    });
+        });
+      }
+    }
+
+    // Use Gemini API directly with gemini-2.0-flash-exp for image generation
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-      if (response.status === 429) throw new Error("Rate limited. Please try again later.");
-      if (response.status === 402) throw new Error("Credits exhausted. Please add funds.");
+      console.error("Gemini API error:", response.status, errText);
+      if (response.status === 429) throw new Error("Rate limited by Gemini. Please try again later.");
+      if (response.status === 403) throw new Error("Invalid Gemini API key. Please update your key.");
       throw new Error(`Generation failed (${response.status})`);
     }
 
     const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    console.log("Gemini response structure:", JSON.stringify(data).substring(0, 500));
+
+    // Extract image from Gemini response
+    let imageUrl: string | null = null;
+    const candidates = data.candidates;
+    if (candidates && candidates.length > 0) {
+      const content = candidates[0].content;
+      if (content && content.parts) {
+        for (const part of content.parts) {
+          if (part.inlineData) {
+            const mimeType = part.inlineData.mimeType || "image/png";
+            imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+      }
+    }
 
     if (!imageUrl) {
       throw new Error("No image was generated. Try a different prompt.");
@@ -110,7 +133,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("ai-thumbnail-generate error:", e);
     const message = e instanceof Error ? e.message : "Unknown error";
-    const status = message.includes("Rate limited") ? 429 : message.includes("Credits") ? 402 : 500;
+    const status = message.includes("Rate limited") ? 429 : message.includes("Invalid") ? 403 : 500;
     return new Response(JSON.stringify({ error: message }), {
       status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
