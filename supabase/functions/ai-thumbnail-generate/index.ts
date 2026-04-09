@@ -80,17 +80,15 @@ serve(async (req) => {
       }
     }
 
-    // Use Gemini API with gemini-2.0-flash-exp-image-generation for image generation
+    // Use Google Imagen model for image generation
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ role: "user", parts }],
-          generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"],
-          },
+          
         }),
       }
     );
@@ -104,21 +102,15 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Gemini response structure:", JSON.stringify(data).substring(0, 500));
+    console.log("Imagen response structure:", JSON.stringify(data).substring(0, 500));
 
-    // Extract image from Gemini response
     let imageUrl: string | null = null;
-    const candidates = data.candidates;
-    if (candidates && candidates.length > 0) {
-      const content = candidates[0].content;
-      if (content && content.parts) {
-        for (const part of content.parts) {
-          if (part.inlineData) {
-            const mimeType = part.inlineData.mimeType || "image/png";
-            imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
-            break;
-          }
-        }
+    const predictions = data.predictions;
+    if (predictions && predictions.length > 0) {
+      const bytesBase64Encoded = predictions[0]?.bytesBase64Encoded;
+      const mimeType = predictions[0]?.mimeType || "image/png";
+      if (bytesBase64Encoded) {
+        imageUrl = `data:${mimeType};base64,${bytesBase64Encoded}`;
       }
     }
 
