@@ -167,7 +167,11 @@ export default function ThumbnailGeneratorPage() {
       if (error) throw error;
       if (data?.imageUrl) {
         setAiImageUrl(data.imageUrl);
-        toast.success("AI thumbnail generated!");
+        if (data?.fallback) {
+          toast.warning(data?.message || "AI provider is busy, so a fallback thumbnail was generated.");
+        } else {
+          toast.success("AI thumbnail generated!");
+        }
       } else {
         throw new Error("No image returned");
       }
