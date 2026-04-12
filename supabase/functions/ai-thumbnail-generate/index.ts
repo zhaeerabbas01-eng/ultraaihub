@@ -30,12 +30,24 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function enhancePrompt(simple: string, size?: string): string {
-  const base = simple.trim().toLowerCase();
   const sizeHint = size ? `, ${size} aspect ratio` : "";
-  if (base.length > 50) {
-    return `${simple}${sizeHint}. YouTube thumbnail style, ultra high quality, 4K, vibrant colors, high contrast, sharp focus, professional composition, click-worthy`;
-  }
-  return `Highly detailed cinematic YouTube thumbnail of ${simple}${sizeHint}, dramatic lighting, vibrant saturated colors, high contrast, ultra realistic, 4K quality, expressive and engaging, sharp focus, professional composition, viral YouTube style, click-worthy thumbnail design`;
+  return `You are a professional YouTube thumbnail designer AI.
+
+Task: Generate a high CTR, viral-quality YouTube thumbnail.
+
+Topic: ${simple}${sizeHint}
+
+Rules:
+- Match reference image style, lighting, and composition if a reference is provided
+- Keep subject centered and expressive
+- Use bold, readable text (max 3-5 words)
+- High contrast colors for clickability
+- 4K ultra sharp quality
+- Emotional facial expressions (surprise, shock, excitement)
+- Clickbait but professional look
+- No blur, no low quality, no watermark
+
+Output: One final thumbnail image, cinematic, dramatic lighting, vibrant saturated colors, ultra realistic`;
 }
 
 function sleep(ms: number) {
