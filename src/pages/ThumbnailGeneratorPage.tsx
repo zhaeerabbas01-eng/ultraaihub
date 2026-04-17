@@ -259,7 +259,7 @@ export default function ThumbnailGeneratorPage() {
                         />
                         <div className="absolute bottom-1.5 right-2 text-white/40 text-[9px] font-medium">MU Tech</div>
                         {m.fallback && (
-                          <div className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-yellow-500/80 text-black font-semibold">
+                          <div className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-accent text-accent-foreground font-semibold">
                             FALLBACK
                           </div>
                         )}
