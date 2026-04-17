@@ -192,7 +192,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, referenceImage, size } = await req.json();
+    const { prompt, referenceImage, referenceImages, size } = await req.json();
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Please provide a prompt." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -204,18 +204,22 @@ serve(async (req) => {
       });
     }
 
-    const enhancedPrompt = enhancePrompt(prompt, size);
-    console.log("Enhanced prompt:", enhancedPrompt);
+    // Normalize references — accept array or single
+    const refs: string[] = Array.isArray(referenceImages)
+      ? referenceImages.filter((r: unknown) => typeof r === "string" && (r as string).startsWith("data:"))
+      : (referenceImage && typeof referenceImage === "string" && referenceImage.startsWith("data:") ? [referenceImage] : []);
 
-    let finalPrompt = enhancedPrompt;
-    if (referenceImage && typeof referenceImage === "string") {
-      finalPrompt = `Using the provided reference image as inspiration, create a new thumbnail: ${enhancedPrompt}`;
-    }
+    const enhancedPrompt = enhancePrompt(prompt, size);
+    console.log("Enhanced prompt:", enhancedPrompt, "refs:", refs.length);
+
+    const finalPrompt = refs.length
+      ? `Using the ${refs.length} provided reference image(s) as visual inspiration (style, lighting, composition, subject), create a brand new thumbnail: ${enhancedPrompt}`
+      : enhancedPrompt;
 
     // Build OpenAI-compatible multimodal content
     const userContent: any[] = [{ type: "text", text: finalPrompt }];
-    if (referenceImage && typeof referenceImage === "string" && referenceImage.startsWith("data:")) {
-      userContent.push({ type: "image_url", image_url: { url: referenceImage } });
+    for (const ref of refs) {
+      userContent.push({ type: "image_url", image_url: { url: ref } });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
