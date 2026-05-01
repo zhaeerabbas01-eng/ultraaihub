@@ -11,7 +11,9 @@ import ImageToolsPage from "./pages/ImageToolsPage";
 import UpscalerPage from "./pages/UpscalerPage";
 import CompressorPage from "./pages/CompressorPage";
 import ThumbnailGeneratorPage from "./pages/ThumbnailGeneratorPage";
-import VideoToolsPage from "./pages/VideoToolsPage";
+import TagExtractorPage from "./pages/TagExtractorPage";
+import MonetizationCheckerPage from "./pages/MonetizationCheckerPage";
+import EarningsCalculatorPage from "./pages/EarningsCalculatorPage";
 import BgRemoverPage from "./pages/BgRemoverPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
@@ -41,7 +43,9 @@ const App = () => (
             <Route path="/upscaler" element={<UpscalerPage />} />
             <Route path="/compressor" element={<CompressorPage />} />
             <Route path="/thumbnail-generator" element={<ThumbnailGeneratorPage />} />
-            <Route path="/video-tools" element={<VideoToolsPage />} />
+            <Route path="/yt-tag-extractor" element={<TagExtractorPage />} />
+            <Route path="/yt-monetization-checker" element={<MonetizationCheckerPage />} />
+            <Route path="/yt-earnings-calculator" element={<EarningsCalculatorPage />} />
             <Route path="/bg-remover" element={<BgRemoverPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
