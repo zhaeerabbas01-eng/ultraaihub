@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Download, Music, Image, Maximize, Minimize2, Wand2, Scissors, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle, Globe, Star, Users } from "lucide-react";
+import { Download, Music, Image, Maximize, Minimize2, Wand2, Tag, DollarSign, Calculator, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle, Globe, Star, Users } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 
 const tools = [
@@ -10,7 +10,9 @@ const tools = [
   { title: "AI Image Upscaler", desc: "Upscale images to 4K with AI. Enhance low-resolution photos to HD quality. Best free AI image enlarger online.", icon: Maximize, url: "/upscaler", color: "from-purple-500/20 to-pink-500/20", badge: "AI Powered" },
   { title: "Image & Video Compressor", desc: "Compress images up to 80% without losing quality. Free online image compressor for websites, social media & email.", icon: Minimize2, url: "/compressor", color: "from-amber-500/20 to-yellow-500/20", badge: null },
   { title: "AI Thumbnail Generator", desc: "Create professional YouTube thumbnails with AI. Auto-generate eye-catching designs with custom text & styles.", icon: Wand2, url: "/thumbnail-generator", color: "from-indigo-500/20 to-violet-500/20", badge: "AI Powered" },
-  { title: "Video Trimmer & Editor", desc: "Trim, cut & edit videos online free. Extract subtitles & captions from any video. No watermark, no signup.", icon: Scissors, url: "/video-tools", color: "from-teal-500/20 to-cyan-500/20", badge: null },
+  { title: "YouTube Tag Extractor", desc: "Extract hidden tags from any YouTube video. Boost your SEO and discover competitor keywords instantly.", icon: Tag, url: "/yt-tag-extractor", color: "from-teal-500/20 to-cyan-500/20", badge: "New" },
+  { title: "YouTube Monetization Checker", desc: "Check if a YouTube channel is monetized. Smart analysis of YPP eligibility signals and content.", icon: DollarSign, url: "/yt-monetization-checker", color: "from-emerald-500/20 to-green-500/20", badge: "New" },
+  { title: "YouTube Earnings Calculator", desc: "Estimate YouTube revenue by views and niche CPM. Plan your content strategy with realistic numbers.", icon: Calculator, url: "/yt-earnings-calculator", color: "from-yellow-500/20 to-amber-500/20", badge: "New" },
   { title: "AI Background Remover", desc: "Remove image background instantly with AI. Create transparent PNG for product photos, portraits & design projects.", icon: Trash2, url: "/bg-remover", color: "from-rose-500/20 to-pink-500/20", badge: "AI Powered" },
 ];
 

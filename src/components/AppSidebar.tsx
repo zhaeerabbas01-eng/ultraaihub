@@ -1,4 +1,4 @@
-import { Home, Music, Image, Maximize, Minimize2, Wand2, Scissors, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText, Tag, DollarSign, Calculator } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -15,7 +15,9 @@ const mainItems = [
   { title: "AI Upscaler", url: "/upscaler", icon: Maximize },
   { title: "Compressor", url: "/compressor", icon: Minimize2 },
   { title: "AI Thumbnail", url: "/thumbnail-generator", icon: Wand2 },
-  { title: "Video Tools", url: "/video-tools", icon: Scissors },
+  { title: "YT Tag Extractor", url: "/yt-tag-extractor", icon: Tag },
+  { title: "Monetization Checker", url: "/yt-monetization-checker", icon: DollarSign },
+  { title: "Earnings Calculator", url: "/yt-earnings-calculator", icon: Calculator },
   { title: "BG Remover", url: "/bg-remover", icon: Image },
 ];
 
