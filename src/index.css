@@ -94,3 +94,19 @@
     box-shadow: 0 0 60px -10px hsl(160 100% 50% / 0.3);
   }
 }
+
+/* Trusted-by infinite marquee */
+@keyframes trusted-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.trusted-marquee {
+  animation: trusted-scroll 35s linear infinite;
+}
+@media (max-width: 640px) {
+  .trusted-marquee { animation-duration: 55s; }
+}
+.trusted-marquee-wrap:hover .trusted-marquee {
+  animation-play-state: paused;
+}
+

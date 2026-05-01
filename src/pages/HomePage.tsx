@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Download, Music, Image, Maximize, Minimize2, Wand2, Tag, DollarSign, Calculator, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle, Globe, Star, Users } from "lucide-react";
 import logoImg from "@/assets/logo.png";
+import { TrustedBy } from "@/components/TrustedBy";
 
 const tools = [
   { title: "YouTube Video Downloader", desc: "Download YouTube, TikTok, Facebook & Instagram videos in HD 1080p. Free online video downloader — no software needed.", icon: Download, url: "/video-downloader", color: "from-red-500/20 to-orange-500/20", badge: "Most Popular" },
@@ -102,6 +103,9 @@ export default function HomePage() {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Trusted By + Ecosystem */}
+      <TrustedBy />
 
       {/* Features */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
