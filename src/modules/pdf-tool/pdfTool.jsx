@@ -81,9 +81,6 @@ export default function PdfTool() {
         if (convertMode === "img2pdf") {
           const out = await imagesToPdf(files);
           downloadBytes(out, "images.pdf");
-        } else if (tab === "convert" && convertMode === "pdf2word") {
-          const out = await pdfToWord(files[0]);
-          downloadBytes(out, files[0].name.replace(/\.pdf$/i, "") + ".doc", "application/msword");
         } else if (convertMode === "pdf2word") {
           const out = await pdfToWord(files[0]);
           downloadBytes(out, files[0].name.replace(/\.pdf$/i, "") + ".doc", "application/msword");
