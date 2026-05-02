@@ -1,4 +1,4 @@
-import { Home, Music, Image, Maximize, Minimize2, Wand2, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText, Tag, DollarSign, Calculator } from "lucide-react";
+import { Home, Music, Image, Maximize, Minimize2, Wand2, Shield, Building2, BookOpen, Mail, HelpCircle, AlertTriangle, Cookie, ShieldCheck, Play, FileText, Tag, DollarSign, Calculator, FileType } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -19,6 +19,7 @@ const mainItems = [
   { title: "Monetization Checker", url: "/yt-monetization-checker", icon: DollarSign },
   { title: "Earnings Calculator", url: "/yt-earnings-calculator", icon: Calculator },
   { title: "BG Remover", url: "/bg-remover", icon: Image },
+  { title: "PDF Tool", url: "/pdf-tool", icon: FileType },
 ];
 
 const companyItems = [
