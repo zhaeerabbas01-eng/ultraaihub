@@ -216,7 +216,7 @@ serve(async (req) => {
       ? referenceImages.filter((r: unknown) => typeof r === "string" && (r as string).startsWith("data:"))
       : (referenceImage && typeof referenceImage === "string" && referenceImage.startsWith("data:") ? [referenceImage] : []);
 
-    const enhancedPrompt = enhancePrompt(prompt, size);
+    const enhancedPrompt = enhancePrompt(prompt, size, typeof titleText === "string" ? titleText : undefined);
     console.log("Enhanced prompt:", enhancedPrompt, "refs:", refs.length);
 
     const finalPrompt = refs.length
