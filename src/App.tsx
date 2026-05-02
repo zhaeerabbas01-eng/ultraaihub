@@ -15,6 +15,7 @@ import TagExtractorPage from "./pages/TagExtractorPage";
 import MonetizationCheckerPage from "./pages/MonetizationCheckerPage";
 import EarningsCalculatorPage from "./pages/EarningsCalculatorPage";
 import BgRemoverPage from "./pages/BgRemoverPage";
+import PdfToolPage from "./pages/PdfToolPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import AboutPage from "./pages/AboutPage";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/yt-monetization-checker" element={<MonetizationCheckerPage />} />
             <Route path="/yt-earnings-calculator" element={<EarningsCalculatorPage />} />
             <Route path="/bg-remover" element={<BgRemoverPage />} />
+            <Route path="/pdf-tool" element={<PdfToolPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/about" element={<AboutPage />} />
