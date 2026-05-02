@@ -199,7 +199,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, referenceImage, referenceImages, size } = await req.json();
+    const { prompt, referenceImage, referenceImages, size, titleText } = await req.json();
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Please provide a prompt." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
