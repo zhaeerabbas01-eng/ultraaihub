@@ -29,25 +29,32 @@ function checkRateLimit(ip: string): boolean {
   return entry.count <= 10;
 }
 
-function enhancePrompt(simple: string, size?: string): string {
+function enhancePrompt(simple: string, size?: string, titleText?: string): string {
   const sizeHint = size ? `, ${size} aspect ratio` : "";
-  return `You are a professional YouTube thumbnail designer AI.
+  const titleLine = titleText && titleText.trim()
+    ? `\nOn-thumbnail headline (render EXACTLY this text, max 3-5 words, bold 3D typography): "${titleText.trim()}"`
+    : `\nOn-thumbnail headline: extract a punchy 3-5 word headline from the topic and render it in bold 3D typography.`;
 
-Task: Generate a high CTR, viral-quality YouTube thumbnail.
+  return `You are a world-class viral YouTube thumbnail designer specializing in SaaS, tech, AI, and business niches (MrBeast + Shopify + Apple keynote energy).
 
-Topic: ${simple}${sizeHint}
+Topic: ${simple}${sizeHint}${titleLine}
 
-Rules:
-- Match reference image style, lighting, and composition if a reference is provided
-- Keep subject centered and expressive
-- Use bold, readable text (max 3-5 words)
-- High contrast colors for clickability
-- 4K ultra sharp quality
-- Emotional facial expressions (surprise, shock, excitement)
-- Clickbait but professional look
-- No blur, no low quality, no watermark
+VISUAL STYLE (mandatory):
+- If a reference image is provided, use it as the main subject — preserve face identity, make expression EXTREMELY emotional (shock, awe, excitement, success, confidence)
+- Background: dark futuristic tech / neon gradient / SaaS dashboard aesthetic (deep navy, electric blue, neon green, magenta highlights)
+- Add glowing UI elements: ecommerce dashboards, analytics graphs going up, store interfaces, payment icons, charts, KPI cards — translucent and floating
+- Bold 3D extruded typography for the headline, glossy plastic or metallic feel, drop shadow + outer glow
+- Color palette: high contrast — neon yellow, hot red, neon green, electric blue glow on dark background
+- Add attention motifs: red/yellow circles around subject's face, bold arrows pointing at money/graphs, white highlight strokes
+- Optional small icons (only if topic-relevant): shopping cart, dollar sign, padlock, rocket, lightning bolt
+- Urgency cues if topic implies it: "FREE", "$0", "NEW", "NOW" badges with star-burst backgrounds
+- Composition: subject on one side (rule of thirds), big text on the other, dashboard/graph elements layered behind
+- Hyper-realistic photo + motion-graphics hybrid; cinematic key lighting; sharp focus; shallow depth of field
+- 4K ultra-crisp, no blur, no low-res artifacts, no watermark, no fake logos
 
-Output: One final thumbnail image, cinematic, dramatic lighting, vibrant saturated colors, ultra realistic`;
+Goal: Looks like a viral SaaS startup launch ad / Shopify alternative / AI tool reveal — maximum click-through rate.
+
+Output: ONE final flat thumbnail image, ready to upload to YouTube.`;
 }
 
 function sleep(ms: number) {
@@ -192,7 +199,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, referenceImage, referenceImages, size } = await req.json();
+    const { prompt, referenceImage, referenceImages, size, titleText } = await req.json();
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Please provide a prompt." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -209,7 +216,7 @@ serve(async (req) => {
       ? referenceImages.filter((r: unknown) => typeof r === "string" && (r as string).startsWith("data:"))
       : (referenceImage && typeof referenceImage === "string" && referenceImage.startsWith("data:") ? [referenceImage] : []);
 
-    const enhancedPrompt = enhancePrompt(prompt, size);
+    const enhancedPrompt = enhancePrompt(prompt, size, typeof titleText === "string" ? titleText : undefined);
     console.log("Enhanced prompt:", enhancedPrompt, "refs:", refs.length);
 
     const finalPrompt = refs.length
