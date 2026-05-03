@@ -1,101 +1,148 @@
 import { useState, useMemo } from "react";
-import { Calculator, TrendingUp } from "lucide-react";
+import { Calculator, TrendingUp, DollarSign, Eye, Calendar } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
 
 const NICHES = [
-  { value: "tech", label: "Tech & Gadgets", low: 4, high: 9 },
-  { value: "gaming", label: "Gaming", low: 1.5, high: 4 },
-  { value: "education", label: "Education", low: 5, high: 12 },
-  { value: "vlog", label: "Vlog / Lifestyle", low: 1, high: 3 },
-  { value: "finance", label: "Finance & Business", low: 12, high: 30 },
+  { value: "tech", label: "Science & Technology", cpm: 20.8, rpm: 11.44 },
+  { value: "finance", label: "Finance & Business", cpm: 30.0, rpm: 16.5 },
+  { value: "education", label: "Education", cpm: 12.0, rpm: 6.6 },
+  { value: "gaming", label: "Gaming", cpm: 4.0, rpm: 2.2 },
+  { value: "vlog", label: "Vlog / Lifestyle", cpm: 3.0, rpm: 1.65 },
+  { value: "music", label: "Music", cpm: 2.5, rpm: 1.37 },
+  { value: "beauty", label: "Beauty & Fashion", cpm: 7.0, rpm: 3.85 },
+  { value: "food", label: "Food & Cooking", cpm: 5.5, rpm: 3.02 },
+  { value: "kids", label: "Kids & Family", cpm: 1.5, rpm: 0.82 },
+  { value: "sports", label: "Sports", cpm: 3.5, rpm: 1.92 },
 ];
 
 export default function EarningsCalculatorPage() {
-  const [views, setViews] = useState("100000");
+  const [viewsPerDay, setViewsPerDay] = useState(1000);
+  const [avgView, setAvgView] = useState(41);
+  const [engagement, setEngagement] = useState(29);
   const [niche, setNiche] = useState("tech");
+  const [customCpm, setCustomCpm] = useState(3.4);
 
   const result = useMemo(() => {
-    const v = parseInt(views.replace(/,/g, ""), 10);
     const n = NICHES.find(x => x.value === niche)!;
-    if (isNaN(v) || v <= 0) return null;
-    const k = v / 1000;
+    // blended cpm: weight selected niche cpm + custom cpm equally
+    const blendedCpm = (n.cpm + customCpm) / 2;
+    // adjustment factor based on view% and engagement
+    const factor = (avgView / 100) * (0.6 + (engagement / 100) * 0.8);
+    const dailyEarn = (viewsPerDay / 1000) * blendedCpm * factor;
+    const monthly = dailyEarn * 30;
+    const yearly = dailyEarn * 365;
     return {
-      low: (k * n.low).toFixed(2),
-      high: (k * n.high).toFixed(2),
-      cpmLow: n.low,
-      cpmHigh: n.high,
-      label: n.label,
+      daily: dailyEarn.toFixed(2),
+      monthly: monthly.toFixed(2),
+      yearly: yearly.toFixed(2),
+      yearlyViews: viewsPerDay * 365,
+      monthlyViews: viewsPerDay * 30,
+      cpm: n.cpm,
+      rpm: n.rpm,
     };
-  }, [views, niche]);
+  }, [viewsPerDay, avgView, engagement, niche, customCpm]);
+
+  const fmt = (n: number) => n.toLocaleString();
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <PageHeader icon={<Calculator className="h-5 w-5" />} title="YouTube Earnings Calculator" description="Estimate potential ad revenue based on views and niche CPM." />
-      <div className="glass-panel rounded-xl p-6 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Total Views</label>
-            <Input type="number" value={views} onChange={e => setViews(e.target.value)} placeholder="100000" className="bg-secondary border-border" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Niche</label>
-            <select value={niche} onChange={e => setNiche(e.target.value)} className="w-full h-10 rounded-md bg-secondary border border-border px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-              {NICHES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
-            </select>
-          </div>
+    <div className="max-w-6xl mx-auto">
+      <PageHeader icon={<Calculator className="h-5 w-5" />} title="YouTube Earnings Calculator" description="Estimate YouTube revenue based on total views, engagement and niche CPM." />
+
+      <div className="glass-panel rounded-xl overflow-hidden mb-6">
+        <div className="bg-gradient-to-r from-primary to-primary/60 p-5">
+          <h2 className="font-display text-xl md:text-2xl font-bold text-primary-foreground">Estimated YouTube Revenue Based on Total Views</h2>
+          <p className="text-xs md:text-sm text-primary-foreground/80 mt-1">Move the sliders below to adjust views, engagement and CPM. The number you enter might earn you up to a quarter of a million dollars.</p>
         </div>
 
-        {result && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <div className="glass-panel rounded-lg p-6 text-center">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <p className="text-xs text-muted-foreground mb-1">Estimated Earnings ({result.label})</p>
-              <p className="font-display text-3xl md:text-4xl font-bold gradient-text">${result.low} – ${result.high}</p>
-              <p className="text-xs text-muted-foreground mt-2">CPM Range: ${result.cpmLow} – ${result.cpmHigh}</p>
+        <div className="grid lg:grid-cols-3 gap-6 p-6">
+          {/* Sliders */}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-foreground flex justify-between mb-2">
+                <span>Views/Day</span><span className="text-primary">{fmt(viewsPerDay)}</span>
+              </label>
+              <Slider min={1000} max={1000000} step={1000} value={[viewsPerDay]} onValueChange={v => setViewsPerDay(v[0])} />
+              <div className="flex justify-between text-[11px] text-muted-foreground mt-1"><span>1,000</span><span>500,000</span><span>1,000,000</span></div>
             </div>
-            <p className="text-[11px] text-muted-foreground/70 italic text-center">Formula: (Views ÷ 1000) × CPM. Actual earnings vary by audience location, watch time, ad format, and YouTube's revenue share (55% to creator).</p>
+
+            <div>
+              <label className="text-sm font-semibold text-foreground flex justify-between mb-2">
+                <span>Average Percentage View (%)</span><span className="text-primary">{avgView}</span>
+              </label>
+              <Slider min={1} max={100} step={1} value={[avgView]} onValueChange={v => setAvgView(v[0])} />
+              <div className="flex justify-between text-[11px] text-muted-foreground mt-1"><span>1</span><span>50</span><span>100</span></div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-foreground flex justify-between mb-2">
+                <span>Average Engagement Rate (%)</span><span className="text-primary">{engagement}</span>
+              </label>
+              <Slider min={1} max={100} step={1} value={[engagement]} onValueChange={v => setEngagement(v[0])} />
+              <div className="flex justify-between text-[11px] text-muted-foreground mt-1"><span>0.1</span><span>50</span><span>100</span></div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-foreground mb-2 block">CPM by Category ($)</label>
+              <select value={niche} onChange={e => setNiche(e.target.value)} className="w-full h-10 rounded-md bg-secondary border border-border px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                {NICHES.map(n => <option key={n.value} value={n.value}>{n.label} (CPM: ${n.cpm} | RPM: ${n.rpm})</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-foreground flex justify-between mb-2">
+                <span>Custom CPM ($)</span><span className="text-primary">{customCpm.toFixed(2)}</span>
+              </label>
+              <Slider min={0} max={20} step={0.1} value={[customCpm]} onValueChange={v => setCustomCpm(v[0])} />
+              <div className="flex justify-between text-[11px] text-muted-foreground mt-1"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span></div>
+            </div>
+          </div>
+
+          {/* Results */}
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-3">
+            <div className="glass-panel rounded-xl p-4 flex justify-between items-center border border-primary/30">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><DollarSign className="h-4 w-4 text-primary" /> Daily</span>
+              <span className="font-display font-bold text-foreground">${result.daily}</span>
+            </div>
+            <div className="glass-panel rounded-xl p-4 flex justify-between items-center border border-primary/30">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><Calendar className="h-4 w-4 text-primary" /> Monthly</span>
+              <span className="font-display font-bold text-foreground">${result.monthly}</span>
+            </div>
+            <div className="glass-panel rounded-xl p-4 flex justify-between items-center border border-primary/40 bg-primary/5">
+              <span className="flex items-center gap-2 text-sm text-foreground font-semibold"><TrendingUp className="h-4 w-4 text-primary" /> Yearly</span>
+              <span className="font-display font-bold text-primary text-lg">${result.yearly}</span>
+            </div>
+            <div className="glass-panel rounded-xl p-4 flex justify-between items-center">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><Eye className="h-4 w-4" /> Views per year</span>
+              <span className="font-medium text-primary">{fmt(result.yearlyViews)}</span>
+            </div>
+            <div className="glass-panel rounded-xl p-4 flex justify-between items-center">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><Eye className="h-4 w-4" /> Views per month</span>
+              <span className="font-medium text-primary">{fmt(result.monthlyViews)}</span>
+            </div>
           </motion.div>
-        )}
+        </div>
       </div>
 
       <article className="glass-panel rounded-xl p-6 mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <h2 className="font-display text-xl font-bold text-foreground">YouTube Earnings Calculator — Free Online Tool</h2>
-        <p><strong className="text-foreground">YouTube Earnings Calculator</strong> aap ko batata hai ke aap ki video ya channel approximately kitna earn kar sakta hai. Calculation simple formula par based hai: <em>Earnings = (Views ÷ 1000) × CPM</em>. CPM (Cost Per Mille) niche ke hisab se change hota hai — Finance niche ka CPM Gaming se kayi guna zyada hota hai.</p>
+        <p>This calculator shows how much YouTube pays based on the number of views. Move the sliders to adjust views, average view percentage, engagement rate and CPM. The formula combines niche CPM with engagement and watch-time signals to estimate realistic creator earnings.</p>
 
-        <h3 className="font-display text-lg font-semibold text-foreground">How to Use</h3>
-        <ol className="list-decimal pl-5 space-y-1">
-          <li>Total views enter karein (jitne views aap ne earn kiye).</li>
-          <li>Apni niche dropdown se select karein (Tech, Gaming, Education, Vlog, Finance).</li>
-          <li>Result automatically low aur high estimate ke sath show ho jaye ga.</li>
-          <li>Different niches try kar ke compare karein.</li>
-          <li>Ye estimated revenue hai — actual amount AdSense dashboard mein milta hai.</li>
-        </ol>
+        <h3 className="font-display text-lg font-semibold text-foreground">How It Works</h3>
+        <p>Earnings = (Views/1000) × Blended CPM × (AvgView% × Engagement Factor). Daily earnings are projected to monthly and yearly figures. CPM (Cost Per Mille) varies by niche — Finance and Tech earn the highest while Gaming and Music are lower.</p>
 
-        <h3 className="font-display text-lg font-semibold text-foreground">Key Features</h3>
+        <h3 className="font-display text-lg font-semibold text-foreground">Tips to Increase Earnings</h3>
         <ul className="list-disc pl-5 space-y-1">
-          <li><strong className="text-foreground">Niche-Based CPM:</strong> 5 popular niches ke real-world CPM ranges.</li>
-          <li><strong className="text-foreground">Instant Calculation:</strong> Type karte hi result update hota hai.</li>
-          <li><strong className="text-foreground">Low to High Range:</strong> Realistic minimum aur maximum estimate.</li>
-          <li><strong className="text-foreground">100% Free:</strong> Koi signup, koi limit, koi ad waiting time.</li>
-          <li><strong className="text-foreground">Mobile Optimized:</strong> Phone aur desktop dono par smooth.</li>
+          <li>Choose a high-CPM niche like Finance, Tech or Education.</li>
+          <li>Improve average view duration with strong intros.</li>
+          <li>Boost engagement (likes, comments, shares) for better ad rates.</li>
+          <li>Target US, UK, Canada and Australia audiences for higher CPM.</li>
+          <li>Use mid-roll ads on videos longer than 8 minutes.</li>
         </ul>
 
-        <h3 className="font-display text-lg font-semibold text-foreground">SEO Importance</h3>
-        <p>Earnings calculator creators ko goal setting mein madad deta hai. Aap dekh sakte hain ke 1 million views se kitna earning hoga aur usi hisab se apni content strategy plan kar sakte hain. Sponsorship deals negotiate karte waqt bhi ye numbers helpful hote hain. SEO experts is tool ko niche selection ke liye bhi use karte hain — jis niche ka CPM zyada hai us mein content banana zyada profitable hota hai.</p>
-
-        <h3 className="font-display text-lg font-semibold text-foreground">FAQ</h3>
-        <div className="space-y-2">
-          <p><strong className="text-foreground">Q1. Result kitna accurate hai?</strong><br/>Industry standard CPM ke base par estimate hai. Actual earnings audience country, ad format aur watch time par depend karti hain.</p>
-          <p><strong className="text-foreground">Q2. CPM aur RPM mein farq?</strong><br/>CPM advertiser ka cost hai, RPM creator ki actual earning hoti hai (YouTube apna 45% rakhta hai).</p>
-          <p><strong className="text-foreground">Q3. Konsi niche sab se zyada earn karti hai?</strong><br/>Finance, Insurance aur B2B niches ka CPM sab se highest hota hai.</p>
-          <p><strong className="text-foreground">Q4. Shorts ka calculation alag hota hai?</strong><br/>Haan, YouTube Shorts ka revenue model alag hai aur CPM bohot kam hota hai.</p>
-          <p><strong className="text-foreground">Q5. Tool free hai?</strong><br/>100% free, koi hidden charges nahi.</p>
-        </div>
-
-        <h3 className="font-display text-lg font-semibold text-foreground">Legal Disclaimer</h3>
-        <p>Ye calculator sirf estimation purpose ke liye hai. Actual YouTube earnings YouTube Studio AdSense dashboard mein dikhti hain. Hum koi guarantee nahi dete aur kisi bhi financial decision ki responsibility user ki hoti hai.</p>
+        <h3 className="font-display text-lg font-semibold text-foreground">Disclaimer</h3>
+        <p>This is an estimate. Actual YouTube earnings depend on AdSense, audience location, ad format, watch time, and YouTube's revenue share (55% to creator).</p>
       </article>
     </div>
   );
