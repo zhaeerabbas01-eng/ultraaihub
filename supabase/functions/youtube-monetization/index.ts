@@ -92,7 +92,7 @@ serve(async (req) => {
 
     if (!channelId) return new Response(JSON.stringify({ error: "Channel not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const cr = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${KEY}`);
+    const cr = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${channelId}&key=${KEY}`);
     const cd = await cr.json();
     if (!cd.items?.length) return new Response(JSON.stringify({ error: "Channel data unavailable" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -128,9 +128,15 @@ serve(async (req) => {
     if (videoMeta.madeForKids === true) reasons.push("⚠ Marked as made-for-kids — limited monetization");
     if (licensed) reasons.push("✓ Contains licensed/claimed content (ads typically run)");
 
+    const thumb = ch.snippet?.thumbnails?.high?.url || ch.snippet?.thumbnails?.medium?.url || ch.snippet?.thumbnails?.default?.url || "";
+    const banner = ch.brandingSettings?.image?.bannerExternalUrl || "";
+    const country = ch.snippet?.country || "";
+    const customUrl = ch.snippet?.customUrl || "";
+    const publishedAt = ch.snippet?.publishedAt || "";
+
     return new Response(JSON.stringify({
       status, score,
-      channel: { id: channelId, title: channelTitle, subscribers: subs, views, videos },
+      channel: { id: channelId, title: channelTitle, subscribers: subs, views, videos, thumbnail: thumb, banner, country, customUrl, publishedAt, description: ch.snippet?.description || "" },
       reasons,
       note: "YouTube does not expose monetization status publicly. This is an estimate based on YPP eligibility signals.",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
