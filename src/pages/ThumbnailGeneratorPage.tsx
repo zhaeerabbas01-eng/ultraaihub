@@ -1,31 +1,37 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
-  Wand2, Download, Loader2, Sparkles, X,
-  Send, Link as LinkIcon, RefreshCw, Paperclip, Maximize2, Copy, DownloadCloud,
+  Wand2, Download, Loader2, Sparkles, X, Plus,
+  Send, Link as LinkIcon, RefreshCw, Maximize2, Copy, DownloadCloud, Image as ImageIcon, ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const sizeOptions = [
-  { value: "16:9", label: "16:9 — YouTube", w: 1280, h: 720 },
-  { value: "1:1", label: "1:1 — Square", w: 1080, h: 1080 },
-  { value: "9:16", label: "9:16 — Shorts/Reels", w: 1080, h: 1920 },
-  { value: "4:3", label: "4:3 — Standard", w: 1280, h: 960 },
-  { value: "21:9", label: "21:9 — Ultra Wide", w: 1680, h: 720 },
+  { value: "16:9", label: "16:9 YouTube", w: 1280, h: 720 },
+  { value: "1:1", label: "1:1 Square", w: 1080, h: 1080 },
+  { value: "9:16", label: "9:16 Shorts", w: 1080, h: 1920 },
+  { value: "4:3", label: "4:3 Standard", w: 1280, h: 960 },
+  { value: "21:9", label: "21:9 Ultra", w: 1680, h: 720 },
 ];
-
 const sizeMeta = (v: string) => sizeOptions.find(s => s.value === v) ?? sizeOptions[0];
 
-type ChatMessage =
-  | { id: string; role: "user"; text: string; refs: string[]; size: string; titleText?: string; ytUrl?: string }
-  | { id: string; role: "assistant"; imageUrl?: string; loading?: boolean; error?: string; fallback?: boolean; size: string; titleText?: string };
+type GenItem = {
+  id: string;
+  prompt: string;
+  size: string;
+  titleText?: string;
+  refs: string[];
+  loading?: boolean;
+  imageUrl?: string;
+  error?: string;
+  fallback?: boolean;
+};
 
 const fileToDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -63,22 +69,25 @@ const downloadDataUrl = async (dataUrl: string, filename: string) => {
 };
 
 export default function ThumbnailGeneratorPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [items, setItems] = useState<GenItem[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [titleText, setTitleText] = useState("");
   const [refs, setRefs] = useState<{ id: string; url: string; name: string }[]>([]);
   const [size, setSize] = useState("16:9");
   const [ytUrl, setYtUrl] = useState("");
   const [showYt, setShowYt] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
   const [loadingYt, setLoadingYt] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [lightbox, setLightbox] = useState<{ url: string; size: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const active = items.find(i => i.id === activeId) || items[items.length - 1];
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, generating]);
+    if (items.length && !activeId) setActiveId(items[items.length - 1].id);
+  }, [items, activeId]);
 
   const handleFiles = useCallback(async (files: FileList | null) => {
     if (!files || !files.length) return;
@@ -86,7 +95,7 @@ export default function ThumbnailGeneratorPage() {
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
       if (file.size > 4 * 1024 * 1024) {
-        toast.error(`${file.name} is over 4MB — skipped`);
+        toast.error(`${file.name} > 4MB — skipped`);
         continue;
       }
       try {
@@ -98,7 +107,7 @@ export default function ThumbnailGeneratorPage() {
     }
     if (newRefs.length) {
       setRefs(prev => [...prev, ...newRefs]);
-      toast.success(`${newRefs.length} reference image(s) added`);
+      toast.success(`${newRefs.length} reference(s) added`);
     }
   }, []);
 
@@ -117,35 +126,28 @@ export default function ThumbnailGeneratorPage() {
         const dataUrl = await urlToDataUrl(thumb);
         setRefs(prev => [...prev, { id: crypto.randomUUID(), url: dataUrl, name: `YT: ${video.title.slice(0, 30)}` }]);
       }
-      if (!prompt.trim()) setPrompt(`Thumbnail in the style of: ${video.title}`);
-      toast.success("YouTube thumbnail imported as reference!");
+      toast.success("YouTube reference imported");
       setShowYt(false);
       setYtUrl("");
     } catch (err: any) {
-      toast.error(err.message || "Could not extract YouTube data");
+      toast.error(err.message || "Could not extract");
     }
     setLoadingYt(false);
   };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) { toast.error("Describe your thumbnail"); return; }
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      text: prompt,
+    const id = crypto.randomUUID();
+    const item: GenItem = {
+      id,
+      prompt,
+      size,
+      titleText: titleText.trim() || undefined,
       refs: refs.map(r => r.url),
-      size,
-      titleText: titleText.trim() || undefined,
-      ytUrl: ytUrl || undefined,
-    };
-    const assistantMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
       loading: true,
-      size,
-      titleText: titleText.trim() || undefined,
     };
-    setMessages(prev => [...prev, userMsg, assistantMsg]);
+    setItems(prev => [...prev, item]);
+    setActiveId(id);
     const promptCopy = prompt;
     const titleCopy = titleText.trim();
     const refsCopy = refs.map(r => r.url);
@@ -164,27 +166,18 @@ export default function ThumbnailGeneratorPage() {
       });
       if (error) throw error;
       if (!data?.imageUrl) throw new Error("No image returned");
-      setMessages(prev => prev.map(m =>
-        m.id === assistantMsg.id
-          ? { ...m, loading: false, imageUrl: data.imageUrl, fallback: !!data.fallback }
-          : m
+      setItems(prev => prev.map(m =>
+        m.id === id ? { ...m, loading: false, imageUrl: data.imageUrl, fallback: !!data.fallback } : m
       ));
       if (data.fallback) toast.warning(data.message || "AI was busy — fallback shown");
       else toast.success("Thumbnail generated!");
     } catch (err: any) {
-      setMessages(prev => prev.map(m =>
-        m.id === assistantMsg.id ? { ...m, loading: false, error: err.message || "Generation failed" } : m
+      setItems(prev => prev.map(m =>
+        m.id === id ? { ...m, loading: false, error: err.message || "Generation failed" } : m
       ));
       toast.error(err.message || "Generation failed");
     }
     setGenerating(false);
-  };
-
-  const reuse = (userMsg: Extract<ChatMessage, { role: "user" }>) => {
-    setPrompt(userMsg.text);
-    setSize(userMsg.size);
-    if (userMsg.titleText) setTitleText(userMsg.titleText);
-    toast.info("Prompt restored — tweak and hit generate");
   };
 
   const downloadOne = async (url: string, sz: string, headline?: string) => {
@@ -201,285 +194,296 @@ export default function ThumbnailGeneratorPage() {
     try {
       const res = await fetch(url);
       const blob = await res.blob();
-      // @ts-ignore - ClipboardItem may be missing in TS lib
+      // @ts-ignore
       await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-      toast.success("Image copied to clipboard");
+      toast.success("Image copied");
     } catch {
-      toast.error("Copy not supported in this browser");
+      toast.error("Copy not supported");
     }
   };
 
   const downloadAll = async () => {
-    const items = messages.filter((m): m is Extract<ChatMessage, { role: "assistant" }> => m.role === "assistant" && !!m.imageUrl);
-    if (!items.length) { toast.error("No generated thumbnails yet"); return; }
-    toast.info(`Downloading ${items.length} thumbnail(s)...`);
-    for (let i = 0; i < items.length; i++) {
-      const m = items[i];
+    const ready = items.filter(i => i.imageUrl);
+    if (!ready.length) { toast.error("Nothing to download yet"); return; }
+    toast.info(`Downloading ${ready.length}...`);
+    for (let i = 0; i < ready.length; i++) {
+      const m = ready[i];
       await downloadDataUrl(m.imageUrl!, `thumbnail-${i + 1}-${m.size.replace(":", "x")}-${Date.now()}.png`);
       await new Promise(r => setTimeout(r, 350));
     }
     toast.success("All downloads triggered");
   };
 
-  const generatedCount = messages.filter(m => m.role === "assistant" && m.imageUrl).length;
+  const generatedCount = items.filter(i => i.imageUrl).length;
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
+    <div className="max-w-4xl mx-auto flex flex-col min-h-[calc(100vh-8rem)]">
       <PageHeader
         icon={<Wand2 className="h-5 w-5" />}
         title="AI Thumbnail Studio"
-        description="Chat with AI to design viral thumbnails — add references, paste YouTube links, generate unlimited variations."
+        description="Describe in any language or style — the AI will generate a viral thumbnail."
       />
 
-      {generatedCount > 0 && (
-        <div className="flex justify-end mb-2">
-          <Button onClick={downloadAll} size="sm" variant="outline" className="gap-1">
-            <DownloadCloud className="h-3 w-3" /> Download all ({generatedCount})
-          </Button>
-        </div>
-      )}
-
-      {/* Chat area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 py-4 space-y-4 scroll-smooth">
-        {messages.length === 0 && (
+      {/* Preview area (output above input) */}
+      <div className="flex-1 flex flex-col gap-3 py-4">
+        {!active ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="glass-panel rounded-2xl p-8 text-center"
+            className="glass-panel rounded-3xl p-10 text-center flex-1 flex flex-col items-center justify-center"
           >
-            <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary" />
-            <h3 className="text-lg font-semibold mb-2">Start designing</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Describe your thumbnail, optionally pin a headline text, attach unlimited reference images, paste a YouTube link to copy a style, and pick an aspect ratio.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-5 max-w-xl mx-auto">
-              {[
-                "Viral SaaS launch — shocked founder + dashboard",
-                "Free Shopify alternative reveal",
-                "AI tool unboxing — futuristic neon",
-                "MrBeast giant cash explosion",
-                "Tech review minimal product shot",
-                "Tutorial bold text + arrow",
-              ].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setPrompt(s)}
-                  className="text-xs glass-panel rounded-lg p-2 hover:border-primary/50 transition text-left text-muted-foreground hover:text-foreground"
-                >
-                  {s}
-                </button>
-              ))}
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <Sparkles className="h-8 w-8" />
             </div>
+            <h3 className="text-xl font-semibold mb-2">Describe your thumbnail</h3>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Write a prompt in any language and any style. Add reference images, set a headline, pick an aspect ratio — your generated thumbnail will appear here.
+            </p>
           </motion.div>
-        )}
-
-        <AnimatePresence>
-          {messages.map((m) => (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              {m.role === "user" ? (
-                <div className="max-w-[85%] glass-panel rounded-2xl rounded-tr-sm p-3 space-y-2 border-primary/30">
-                  {m.refs.length > 0 && (
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {m.refs.map((url, i) => (
-                        <img key={i} src={url} alt="ref" className="w-full h-14 object-cover rounded-md" />
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{m.text}</p>
-                  {m.titleText && (
-                    <p className="text-[11px] text-primary/90 font-semibold">Headline: "{m.titleText}"</p>
-                  )}
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
-                    <span className="px-1.5 py-0.5 rounded bg-secondary">{m.size}</span>
-                    {m.refs.length > 0 && <span>{m.refs.length} reference(s)</span>}
-                    <button onClick={() => reuse(m)} className="ml-auto hover:text-primary flex items-center gap-1">
-                      <RefreshCw className="h-3 w-3" /> reuse
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="max-w-[90%] w-full glass-panel rounded-2xl rounded-tl-sm p-3 space-y-2">
-                  {m.loading ? (
-                    <div
-                      className="rounded-xl bg-secondary/30 flex flex-col items-center justify-center text-muted-foreground"
-                      style={{ aspectRatio: m.size.replace(":", "/"), minHeight: 220 }}
-                    >
-                      <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                      <p className="text-xs">Generating thumbnail...</p>
-                      <p className="text-[10px] opacity-60 mt-1">Ultra Media AI · {m.size}</p>
-                    </div>
-                  ) : m.error ? (
-                    <div className="text-sm text-destructive p-3">{m.error}</div>
-                  ) : m.imageUrl ? (
-                    <>
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.35 }}
-                        className="rounded-xl overflow-hidden relative group ring-1 ring-border"
-                      >
-                        <img
-                          src={m.imageUrl}
-                          alt="Generated thumbnail"
-                          className="w-full object-cover cursor-zoom-in"
-                          style={{ aspectRatio: m.size.replace(":", "/") }}
-                          onClick={() => setLightbox({ url: m.imageUrl!, size: m.size })}
-                        />
-
-                        {/* Hover toolbar */}
-                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                          <button
-                            onClick={() => setLightbox({ url: m.imageUrl!, size: m.size })}
-                            className="bg-background/80 backdrop-blur hover:bg-primary hover:text-primary-foreground rounded-md p-1.5 transition"
-                            title="View full size"
-                          >
-                            <Maximize2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => copyImage(m.imageUrl!)}
-                            className="bg-background/80 backdrop-blur hover:bg-primary hover:text-primary-foreground rounded-md p-1.5 transition"
-                            title="Copy image"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => downloadOne(m.imageUrl!, m.size, m.titleText)}
-                            className="bg-background/80 backdrop-blur hover:bg-primary hover:text-primary-foreground rounded-md p-1.5 transition"
-                            title="Download"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        {/* Aspect chip */}
-                        <div className="absolute bottom-2 left-2 text-[10px] px-2 py-0.5 rounded bg-background/70 backdrop-blur text-foreground/80 font-medium">
-                          {m.size} · {sizeMeta(m.size).w}×{sizeMeta(m.size).h}
-                        </div>
-                        <div className="absolute bottom-1.5 right-2 text-white/40 text-[9px] font-medium">MU Tech</div>
-                        {m.fallback && (
-                          <div className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-accent text-accent-foreground font-semibold">
-                            FALLBACK
-                          </div>
-                        )}
-                      </motion.div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => downloadOne(m.imageUrl!, m.size, m.titleText)}
-                          className="flex-1 bg-primary hover:bg-primary/90"
-                        >
-                          <Download className="h-3 w-3 mr-1" /> Download HD PNG
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setLightbox({ url: m.imageUrl!, size: m.size })}
-                          title="Open full size"
-                        >
-                          <Maximize2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      {/* Composer */}
-      <div className="glass-panel rounded-2xl p-3 mt-3 space-y-2">
-        {showYt && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="flex gap-2">
-            <Input
-              value={ytUrl}
-              onChange={(e) => setYtUrl(e.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
-              className="bg-secondary border-border text-sm"
-            />
-            <Button onClick={handleYtExtract} disabled={loadingYt} size="sm" variant="outline">
-              {loadingYt ? <Loader2 className="h-3 w-3 animate-spin" /> : "Import"}
-            </Button>
-            <Button onClick={() => { setShowYt(false); setYtUrl(""); }} size="sm" variant="ghost">
-              <X className="h-3 w-3" />
-            </Button>
-          </motion.div>
-        )}
-
-        {refs.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {refs.map((r) => (
-              <div key={r.id} className="relative shrink-0 group">
-                <img src={r.url} alt={r.name} className="h-14 w-14 object-cover rounded-lg border border-border" />
-                <button
-                  onClick={() => removeRef(r.id)}
-                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+        ) : (
+          <motion.div
+            key={active.id}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="glass-panel rounded-3xl p-3 sm:p-4 space-y-3"
+          >
+            {/* Image / state */}
+            {active.loading ? (
+              <div
+                className="rounded-2xl bg-secondary/40 flex flex-col items-center justify-center text-muted-foreground"
+                style={{ aspectRatio: active.size.replace(":", "/"), minHeight: 240 }}
+              >
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-3" />
+                <p className="text-sm font-medium">Generating thumbnail…</p>
+                <p className="text-[11px] opacity-60 mt-1">Ultra Media AI · {active.size}</p>
               </div>
+            ) : active.error ? (
+              <div className="rounded-2xl bg-destructive/10 text-destructive p-6 text-sm text-center">
+                {active.error}
+              </div>
+            ) : active.imageUrl ? (
+              <div className="rounded-2xl overflow-hidden relative group ring-1 ring-border">
+                <img
+                  src={active.imageUrl}
+                  alt="Generated thumbnail"
+                  className="w-full object-cover cursor-zoom-in"
+                  style={{ aspectRatio: active.size.replace(":", "/") }}
+                  onClick={() => setLightbox({ url: active.imageUrl!, size: active.size })}
+                />
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                  <button onClick={() => setLightbox({ url: active.imageUrl!, size: active.size })} className="bg-background/80 backdrop-blur hover:bg-primary hover:text-primary-foreground rounded-md p-1.5">
+                    <Maximize2 className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => copyImage(active.imageUrl!)} className="bg-background/80 backdrop-blur hover:bg-primary hover:text-primary-foreground rounded-md p-1.5">
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="absolute bottom-2 left-2 text-[10px] px-2 py-0.5 rounded bg-background/70 backdrop-blur font-medium">
+                  {active.size} · {sizeMeta(active.size).w}×{sizeMeta(active.size).h}
+                </div>
+                <div className="absolute bottom-1.5 right-2 text-white/40 text-[9px] font-medium">MU Tech</div>
+                {active.fallback && (
+                  <div className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-accent text-accent-foreground font-semibold">FALLBACK</div>
+                )}
+              </div>
+            ) : null}
+
+            {/* Action row */}
+            {active.imageUrl && (
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => downloadOne(active.imageUrl!, active.size, active.titleText)} className="flex-1 min-w-[160px] bg-primary hover:bg-primary/90">
+                  <Download className="h-3.5 w-3.5 mr-1.5" /> Download HD PNG
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => copyImage(active.imageUrl!)}>
+                  <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setLightbox({ url: active.imageUrl!, size: active.size })}>
+                  <Maximize2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+
+            {/* Prompt echo */}
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              <span className="text-foreground/80 font-medium">Prompt:</span> {active.prompt}
+            </p>
+          </motion.div>
+        )}
+
+        {/* History strip */}
+        {items.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-[11px] text-muted-foreground shrink-0">History:</span>
+            {items.map(it => (
+              <button
+                key={it.id}
+                onClick={() => setActiveId(it.id)}
+                className={`relative shrink-0 h-12 w-20 rounded-lg overflow-hidden border-2 transition ${active?.id === it.id ? "border-primary" : "border-border hover:border-primary/50"}`}
+                title={it.prompt}
+              >
+                {it.imageUrl ? (
+                  <img src={it.imageUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-secondary">
+                    {it.loading ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <X className="h-3 w-3 text-destructive" />}
+                  </div>
+                )}
+              </button>
             ))}
-            <span className="text-[10px] text-muted-foreground self-end pb-1">{refs.length} ref(s)</span>
+            {generatedCount > 1 && (
+              <Button onClick={downloadAll} size="sm" variant="outline" className="ml-auto gap-1 shrink-0">
+                <DownloadCloud className="h-3 w-3" /> All ({generatedCount})
+              </Button>
+            )}
           </div>
         )}
+      </div>
 
-        <Input
-          value={titleText}
-          onChange={(e) => setTitleText(e.target.value)}
-          placeholder='Optional headline on thumbnail (e.g. "FREE SHOPIFY KILLER")'
-          maxLength={40}
-          className="bg-secondary border-border text-sm h-9"
-        />
+      {/* Unified Composer (Gemini-style) */}
+      <div className="sticky bottom-3 z-10">
+        <div className="glass-panel rounded-3xl p-3 shadow-xl border-border/60 backdrop-blur-xl">
+          {/* YouTube row */}
+          <AnimatePresence>
+            {showYt && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex gap-2 mb-2">
+                <Input
+                  value={ytUrl}
+                  onChange={(e) => setYtUrl(e.target.value)}
+                  placeholder="Paste YouTube URL to use as reference..."
+                  className="bg-secondary border-border text-sm h-9"
+                />
+                <Button onClick={handleYtExtract} disabled={loadingYt} size="sm" variant="outline">
+                  {loadingYt ? <Loader2 className="h-3 w-3 animate-spin" /> : "Import"}
+                </Button>
+                <Button onClick={() => { setShowYt(false); setYtUrl(""); }} size="sm" variant="ghost"><X className="h-3 w-3" /></Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleGenerate(); }
-          }}
-          placeholder="Describe your thumbnail — e.g. 'shocked founder pointing at sales dashboard, neon SaaS background'"
-          className="bg-secondary border-border min-h-[60px] resize-none text-sm"
-        />
+          {/* Headline row */}
+          <AnimatePresence>
+            {showTitle && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mb-2">
+                <Input
+                  value={titleText}
+                  onChange={(e) => setTitleText(e.target.value)}
+                  placeholder='Headline text on thumbnail (any language)'
+                  maxLength={40}
+                  className="bg-secondary border-border text-sm h-9"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
-            className="hidden"
-          />
-          <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-1" title="Attach reference images (unlimited)">
-            <Paperclip className="h-3 w-3" /> <span className="hidden sm:inline">Attach</span>
-          </Button>
-          <Button type="button" size="sm" variant={showYt ? "default" : "outline"} onClick={() => setShowYt(v => !v)} className="gap-1" title="Import YouTube thumbnail as reference">
-            <LinkIcon className="h-3 w-3" /> <span className="hidden sm:inline">YouTube</span>
-          </Button>
-
-          <Select value={size} onValueChange={setSize}>
-            <SelectTrigger className="bg-secondary border-border h-9 text-xs w-auto min-w-[110px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {sizeOptions.map(s => (
-                <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+          {/* Reference thumbs */}
+          {refs.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-1">
+              {refs.map((r) => (
+                <div key={r.id} className="relative shrink-0 group">
+                  <img src={r.url} alt={r.name} className="h-12 w-12 object-cover rounded-lg border border-border" />
+                  <button onClick={() => removeRef(r.id)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          )}
 
-          <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} size="sm" className="ml-auto bg-primary hover:bg-primary/90 gap-1">
-            {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-            Generate
-          </Button>
+          {/* Prompt */}
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleGenerate(); }
+            }}
+            placeholder="Describe your thumbnail in any language or style..."
+            rows={2}
+            className="w-full bg-transparent border-0 outline-none resize-none text-sm placeholder:text-muted-foreground px-2 py-1.5 focus:ring-0"
+          />
+
+          {/* Bottom toolbar */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+              className="hidden"
+            />
+
+            {/* + add menu (merges all options) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="h-9 w-9 rounded-full bg-secondary hover:bg-secondary/70 border border-border flex items-center justify-center transition"
+                  title="Add references and options"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Add</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                  <ImageIcon className="h-4 w-4 mr-2" /> Upload images
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowYt(v => !v)}>
+                  <LinkIcon className="h-4 w-4 mr-2" /> YouTube reference
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowTitle(v => !v)}>
+                  <Sparkles className="h-4 w-4 mr-2" /> {showTitle ? "Hide" : "Add"} on-image headline
+                </DropdownMenuItem>
+                {active && active.imageUrl && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => { setPrompt(active.prompt); if (active.titleText) { setTitleText(active.titleText); setShowTitle(true); } setSize(active.size); }}>
+                      <RefreshCw className="h-4 w-4 mr-2" /> Reuse last prompt
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Aspect ratio */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="h-9 px-3 rounded-full bg-secondary hover:bg-secondary/70 border border-border flex items-center gap-1.5 text-xs font-medium transition"
+                  title="Aspect ratio"
+                >
+                  {size} <ChevronDown className="h-3 w-3 opacity-60" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {sizeOptions.map(s => (
+                  <DropdownMenuItem key={s.value} onClick={() => setSize(s.value)} className="text-xs">
+                    {s.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Status chips */}
+            <div className="hidden sm:flex items-center gap-1 ml-1 text-[10px] text-muted-foreground">
+              {refs.length > 0 && <span className="px-1.5 py-0.5 rounded bg-secondary">{refs.length} ref</span>}
+              {showTitle && titleText && <span className="px-1.5 py-0.5 rounded bg-secondary truncate max-w-[100px]">"{titleText}"</span>}
+            </div>
+
+            {/* Send */}
+            <Button
+              onClick={handleGenerate}
+              disabled={generating || !prompt.trim()}
+              size="icon"
+              className="ml-auto h-9 w-9 rounded-full bg-primary hover:bg-primary/90 disabled:opacity-40"
+              title="Generate (Enter)"
+            >
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
-        <p className="text-[10px] text-muted-foreground text-center">
-          Tip: Ctrl/⌘ + Enter to generate · Add a headline for sharper on-thumbnail text · Unlimited references
+        <p className="text-[10px] text-muted-foreground text-center mt-2">
+          Enter to generate · Shift+Enter for new line · Works in any language
         </p>
       </div>
 
