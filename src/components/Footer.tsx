@@ -21,6 +21,9 @@ export function Footer() {
               <li><Link to="/cookies" className="text-muted-foreground hover:text-primary transition-colors">Cookie Policy</Link></li>
               <li><Link to="/gdpr" className="text-muted-foreground hover:text-primary transition-colors">GDPR</Link></li>
               <li><Link to="/disclaimer" className="text-muted-foreground hover:text-primary transition-colors">Disclaimer</Link></li>
+              <li><Link to="/dmca" className="text-muted-foreground hover:text-primary transition-colors">DMCA</Link></li>
+              <li><Link to="/editorial-policy" className="text-muted-foreground hover:text-primary transition-colors">Editorial Policy</Link></li>
+              <li><Link to="/ai-policy" className="text-muted-foreground hover:text-primary transition-colors">AI Usage Policy</Link></li>
             </ul>
           </div>
           <div>
