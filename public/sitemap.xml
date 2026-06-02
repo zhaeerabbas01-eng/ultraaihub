@@ -17,5 +17,8 @@
   <url><loc>https://ultramediaaihub.lovable.app/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://ultramediaaihub.lovable.app/cookies</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://ultramediaaihub.lovable.app/gdpr</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://ultramediaaihub.lovable.app/disclaimer</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultraaihub.lovable.app/disclaimer</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultraaihub.lovable.app/dmca</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://ultraaihub.lovable.app/editorial-policy</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://ultraaihub.lovable.app/ai-policy</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
 </urlset>
