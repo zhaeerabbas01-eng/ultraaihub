@@ -25,6 +25,9 @@ import DisclaimerPage from "./pages/DisclaimerPage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
 import GdprPage from "./pages/GdprPage";
 import HelpPage from "./pages/HelpPage";
+import DmcaPage from "./pages/DmcaPage";
+import EditorialPolicyPage from "./pages/EditorialPolicyPage";
+import AiPolicyPage from "./pages/AiPolicyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
