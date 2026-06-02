@@ -61,6 +61,9 @@ const App = () => (
             <Route path="/cookies" element={<CookiePolicyPage />} />
             <Route path="/gdpr" element={<GdprPage />} />
             <Route path="/help" element={<HelpPage />} />
+            <Route path="/dmca" element={<DmcaPage />} />
+            <Route path="/editorial-policy" element={<EditorialPolicyPage />} />
+            <Route path="/ai-policy" element={<AiPolicyPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
