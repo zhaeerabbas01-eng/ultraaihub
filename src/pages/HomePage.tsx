@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Download, Music, Image, Maximize, Minimize2, Wand2, Tag, DollarSign, Calculator, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle, Globe, Star, Users } from "lucide-react";
+import { Download, Music, Image, Maximize, Minimize2, Wand2, Tag, DollarSign, Calculator, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle, Globe, Star, Users, BookOpen, Target, ClipboardCheck, Heart } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import { TrustedBy } from "@/components/TrustedBy";
+import { SEO } from "@/components/SEO";
+import { blogArticles } from "@/data/blogArticles";
 
 const tools = [
   { title: "YouTube Video Downloader", desc: "Download YouTube, TikTok, Facebook & Instagram videos in HD 1080p. Free online video downloader — no software needed.", icon: Download, url: "/video-downloader", color: "from-red-500/20 to-orange-500/20", badge: "Most Popular" },
@@ -35,8 +37,17 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } 
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 export default function HomePage() {
+  const featuredArticles = blogArticles.slice(blogArticles.length - 3).reverse();
+  const recentUpdates = [...blogArticles]
+    .sort((a, b) => (b.lastUpdated ?? b.date).localeCompare(a.lastUpdated ?? a.date))
+    .slice(0, 5);
   return (
     <div className="max-w-6xl mx-auto">
+      <SEO
+        title="Ultra Media AI Hub — Free Video Downloader, AI Upscaler & Media Tools"
+        description="Free online video downloader, AI image upscaler, background remover, MP3 converter, image compressor & thumbnail generator. 100% free, no signup."
+        path="/"
+      />
       {/* Hero */}
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-16 relative">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
@@ -74,6 +85,35 @@ export default function HomePage() {
           </div>
         ))}
       </motion.div>
+
+      {/* Mission Statement */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.32 }} className="glass-panel rounded-xl p-6 mb-8 text-center border border-primary/20">
+        <Target className="h-6 w-6 mx-auto mb-3 text-primary" />
+        <h2 className="font-display text-xl font-bold text-foreground mb-2">Our Mission</h2>
+        <p className="text-muted-foreground text-sm max-w-3xl mx-auto leading-relaxed">
+          Ultra Media AI Hub exists to make professional-grade AI and media tools genuinely free, private, and useful — for creators, students, and small businesses everywhere. No signups. No watermarks. No dark patterns. Just tools that respect your time and your data.
+        </p>
+      </motion.section>
+
+      {/* Why Trust Us */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.34 }} className="mb-10">
+        <h2 className="font-display text-xl font-bold text-foreground mb-4 text-center">Why You Can Trust Us</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { icon: Users, title: "Transparent Ownership", desc: "Real founder (Muhammad Usman Zaheer), real address, real contact." },
+            { icon: Shield, title: "Files Stay Private", desc: "Most tools run in your browser. We don't store your media." },
+            { icon: ClipboardCheck, title: "Human-Edited Content", desc: "Every article is researched, written and reviewed by named editors." },
+            { icon: Heart, title: "Free Forever", desc: "No paywalls, no surprise upgrades. Ads are how we keep the lights on." },
+          ].map((c, i) => (
+            <div key={i} className="glass-panel rounded-xl p-4">
+              <c.icon className="h-5 w-5 mb-2 text-primary" />
+              <h3 className="font-display font-semibold text-foreground text-sm">{c.title}</h3>
+              <p className="text-muted-foreground text-xs mt-1">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
 
       {/* Section Title */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="text-center mb-8">
@@ -150,6 +190,52 @@ export default function HomePage() {
 
           <p>Compatible with <strong className="text-foreground">Chrome, Firefox, Safari, Edge, Opera, and Brave</strong> on Windows, macOS, Linux, Android, and iOS. Start using our professional AI-powered media tools today — completely free.</p>
         </div>
+      </motion.section>
+
+      {/* Featured Articles */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-xl font-bold text-foreground flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> Featured Articles</h2>
+          <Link to="/blog" className="text-xs text-primary hover:underline">View all →</Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {featuredArticles.map(a => (
+            <Link key={a.slug} to={`/blog?post=${a.slug}`} className="glass-panel rounded-xl p-4 hover:glow-sm transition-all group">
+              <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full">{a.category}</span>
+              <h3 className="font-display font-semibold text-foreground text-sm mt-2 line-clamp-2 group-hover:text-primary">{a.title}</h3>
+              <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{a.excerpt}</p>
+              <p className="text-xs text-muted-foreground/60 mt-2">{a.readTime}</p>
+            </Link>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Editorial Standards */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel rounded-xl p-6 mb-10">
+        <h2 className="font-display text-xl font-bold text-foreground mb-3 flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-primary" /> Editorial Standards</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-3">Every guide on Ultra Media AI Hub is researched from primary sources, written by a named author, fact-checked, and reviewed at least every 90 days.</p>
+        <div className="flex gap-3 flex-wrap text-sm">
+          <Link to="/editorial-policy" className="text-primary hover:underline">Editorial Policy</Link>
+          <span className="text-muted-foreground">·</span>
+          <Link to="/content-review-process" className="text-primary hover:underline">Content Review Process</Link>
+          <span className="text-muted-foreground">·</span>
+          <Link to="/ai-policy" className="text-primary hover:underline">AI Usage Policy</Link>
+          <span className="text-muted-foreground">·</span>
+          <Link to="/editorial-team" className="text-primary hover:underline">Editorial Team</Link>
+        </div>
+      </motion.section>
+
+      {/* Recent Updates */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel rounded-xl p-6 mb-10">
+        <h2 className="font-display text-xl font-bold text-foreground mb-4">Recent Updates</h2>
+        <ul className="space-y-2 text-sm">
+          {recentUpdates.map(u => (
+            <li key={u.slug} className="flex items-start gap-3 border-b border-border/30 pb-2 last:border-0">
+              <span className="text-xs text-muted-foreground whitespace-nowrap mt-0.5">{u.lastUpdated ?? u.date}</span>
+              <Link to={`/blog?post=${u.slug}`} className="text-foreground hover:text-primary">{u.title}</Link>
+            </li>
+          ))}
+        </ul>
       </motion.section>
     </div>
   );

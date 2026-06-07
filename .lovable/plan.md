@@ -1,80 +1,141 @@
-## Goal
+## Phase 2 + Phase 3 — AdSense Authority, SEO Trust & Content Expansion
 
-Upgrade ONLY the AI Thumbnail Generator (`/thumbnail-generator`) — better output presentation, better download UX, and a stronger viral SaaS-style prompt. No other tools touched. No layout/branding changes elsewhere.
+**Guardrail:** No tool page, edge function, API, business logic, or user-facing functionality will be modified. All work is in content, SEO metadata, structured data, new informational pages, and homepage trust sections.
 
-## What changes
+---
 
-### 1. Stronger prompt engineering (backend)
-File: `supabase/functions/ai-thumbnail-generate/index.ts`
+### 1. Content Authority — 7 New Long-Form Articles
 
-Replace the current `enhancePrompt()` with a viral SaaS / MrBeast-style template that bakes in the user's requested style requirements automatically — so users can type a short title and still get a high-CTR thumbnail.
+Append to `src/data/blogArticles.ts`. Each article: 1800–3000 words, human-tone, EEAT-aligned, plagiarism-free, with intro → 5–7 H2 sections → tables/lists where useful → FAQ block (4–6 Qs) → conclusion → 3–5 internal links to existing tools/articles → 1–3 outbound authority links (Google, OpenAI, W3C, MIT etc.) → author byline, published date, last-updated date, focusKeyword, tags, category.
 
-The new system prompt will instruct Gemini to:
-- Treat reference image as the main subject (preserve face, expression)
-- Apply dark tech / neon gradient / futuristic SaaS dashboard background
-- Add glowing UI elements (dashboards, graphs, payment icons)
-- Bold 3D typography for the title text (max 3-5 words)
-- High-contrast colors (yellow / red / neon green / blue glow)
-- Arrows, circles, highlights for attention
-- Optional small icons (cart, money, lock, rocket, lightning) when relevant
-- Urgency cues (FREE, $0, NOW) when the title implies it
-- Hyper-realistic + motion graphics hybrid, cinematic lighting, sharp focus
+Topics:
+1. Best Free AI Tools for Students in 2026
+2. How AI Is Changing Content Creation
+3. Complete Beginner Guide to Prompt Engineering
+4. Best AI Video Generators Compared (2026)
+5. AI Productivity Tools for Freelancers
+6. The Future of Artificial Intelligence in Daily Life
+7. AI Tools for Small Business Owners
 
-Also add an optional `titleText` field — if provided, it is rendered as the on-thumbnail headline; otherwise the AI extracts it from the prompt.
+Extend the `BlogArticle` type with `lastUpdated`, `author`, `authorSlug`, `tags[]`, `relatedSlugs[]` (backfill optional fields for older articles).
 
-### 2. Better output UI (frontend)
-File: `src/pages/ThumbnailGeneratorPage.tsx`
+---
 
-Improvements to the assistant message bubble showing the generated image:
+### 2. Author & Editorial Authority Pages
 
-- **Larger preview card** with proper aspect-ratio container so 16:9 / 9:16 / 1:1 all display correctly without distortion
-- **Hover toolbar** over the image with: Download, Open full-size, Copy image, Regenerate, Edit prompt
-- **Lightbox modal** — click image to view full resolution against a dark backdrop
-- **Fallback badge** — clear "AI fallback (provider busy)" pill when `fallback: true`
-- **Aspect ratio chip** shown on each result (e.g. "16:9 · 1280×720")
-- **Subtle scale-in animation** when the image arrives
+New routes + pages:
+- `/author/usman-zaheer` → `src/pages/AuthorProfilePage.tsx` (dynamic by slug; founder is first author)
+- `/founder` → `src/pages/FounderPage.tsx` (Muhammad Usman Zaheer — bio, expertise, credentials, photo from `src/assets/founder-usman.png`)
+- `/editorial-team` → `src/pages/EditorialTeamPage.tsx` (team roles, expertise areas, contact)
+- `/content-review-process` → `src/pages/ContentReviewProcessPage.tsx` (research → draft → fact-check → edit → publish → 90-day review)
+- `/category/:slug` → `src/pages/CategoryPage.tsx` (lists articles per category for SEO-friendly category hubs)
 
-### 3. Better download UX
-- One-click **Download** button that saves as `thumbnail-{title-slug}-{timestamp}.png`
-- Convert data-URL to a Blob and use `URL.createObjectURL` so big images don't hang the browser
-- Toast confirmation on download
-- **Download all** button in the chat header to zip-free batch download every generated image in the current session (sequential `<a download>` clicks)
+Each page covers: expertise, editorial standards, fact-checking, content update policy, publishing guidelines, corrections policy.
 
-### 4. Composer polish (small)
-- Add an optional **"Title text on thumbnail"** input next to the aspect ratio selector — passed to the edge function as `titleText`
-- Keep existing chat-style composer, attachments, YouTube import, and unlimited reference images exactly as they are
+Register all routes in `src/App.tsx` and link from `Footer.tsx` + About page.
 
-## What does NOT change
-- No other pages, no sidebar, no homepage, no blog, no AdSense, no other tools
-- No auth, no DB schema, no new tables
-- Existing edge function endpoint, request shape (only adds optional `titleText`), and YouTube reference-import flow stay backwards compatible
+---
 
-## Technical notes
+### 3. Reading UX (Blog Only)
 
-```text
-Edge function payload (additive):
-{
-  prompt: string,
-  referenceImages?: string[],   // unchanged
-  size?: "16:9"|"1:1"|...,      // unchanged
-  titleText?: string            // NEW, optional
-}
-```
+In `src/pages/BlogPage.tsx` article view:
+- `ReadingProgressBar` component (fixed top, scroll-driven, primary color)
+- `Breadcrumbs` component: Home › Blog › {Category} › {Title}
+- Estimated reading time (already present — keep)
+- "Last updated" line beside published date
+- Author bio card under content (avatar, name, role, link to author page)
+- "Related articles" grid (3 cards) from same category / matching tags
 
-Download helper:
-```ts
-const a = document.createElement("a");
-const blob = await (await fetch(dataUrl)).blob();
-a.href = URL.createObjectURL(blob);
-a.download = `thumbnail-${slug}-${Date.now()}.png`;
-a.click();
-URL.revokeObjectURL(a.href);
-```
+New components: `src/components/ReadingProgressBar.tsx`, `src/components/Breadcrumbs.tsx`, `src/components/AuthorBioCard.tsx`, `src/components/RelatedArticles.tsx`.
 
-Lightbox: simple `<Dialog>` from `@/components/ui/dialog` with the image inside an `AspectRatio` wrapper.
+---
 
-## Files touched
-- `supabase/functions/ai-thumbnail-generate/index.ts` — new prompt template + accept `titleText`
-- `src/pages/ThumbnailGeneratorPage.tsx` — output card, lightbox, download helpers, optional title input
+### 4. Structured Data (JSON-LD)
 
-After deploy: edge function is auto-deployed; user can test at `/thumbnail-generator`.
+Install `react-helmet-async` and wrap app in `HelmetProvider` (`src/main.tsx`).
+
+Inject JSON-LD via `<Helmet>` per page type:
+- **Organization** + **WebSite** (with SearchAction) — `index.html` (sitewide static)
+- **Article** + **BreadcrumbList** + **FAQPage** — blog article view
+- **BreadcrumbList** — all inner pages
+- **Person** — founder + author pages
+- **CollectionPage** — category pages
+
+Helper: `src/lib/seo/jsonLd.ts` with typed builders.
+
+---
+
+### 5. Per-Page SEO Meta
+
+Using `react-helmet-async`, add unique title / description / canonical / OG / Twitter Card tags to every route. Remove duplicate canonical from `index.html` (keep sitewide OG as fallback).
+
+Apply to: Home, all 10 tool pages, Blog list, Blog article (dynamic), About, Contact, Help, Founder, Author, Editorial Team, Content Review, Category, all legal pages.
+
+Helper: `src/components/SEO.tsx` (props: title, description, canonical, ogImage?, type?, jsonLd?).
+
+---
+
+### 6. Homepage Trust Rebuild
+
+Edit `src/pages/HomePage.tsx` — add new sections (keep existing tool grid + stats intact):
+- **Mission statement** band (1 paragraph, value proposition)
+- **Why trust us** (4 cards: transparent ownership, no data stored, human-edited content, free forever)
+- **Featured articles** strip (3 cards from new long-form posts)
+- **Featured tools** highlight (top 3 tools — visual link to detail)
+- **Editorial standards** mini-section (links to Editorial Policy + Content Review)
+- **Recent updates** changelog list (last 5 article/tool updates, dated)
+
+---
+
+### 7. Internal Linking Layer
+
+- Footer: add Author, Founder, Editorial Team, Content Review links
+- Blog articles: ensure 3–5 contextual internal links each (tools + other articles)
+- Category pages cross-link to related categories
+- Author page lists all that author's articles
+- All legal pages link to Editorial Policy / Content Review for context
+
+---
+
+### 8. Sitemap + Robots
+
+Update `public/sitemap.xml`: fix mixed domains (some entries use `ultraaihub` vs `ultramediaaihub` — standardize to `https://ultraaihub.lovable.app`), add all 7 new articles, author/founder/editorial/review/category routes. `robots.txt` already correct — leave as is.
+
+---
+
+### 9. AdSense Readiness Report
+
+Generate `/mnt/documents/adsense-readiness-report-v2.md`:
+- Per-page audit table (URL, word count, meta status, schema status, internal links, verdict)
+- Compliance score (target 92/100+)
+- Remaining policy risks (e.g. YouTube downloader page wording — recommend disclaimer tweaks, no code change unless approved)
+- Content gaps (topics still missing)
+- Recommended next actions (E.g. Phase 4 items)
+
+Delivered as `<presentation-artifact>`.
+
+---
+
+### Out of Scope (Untouched)
+
+- All `src/pages/*Tool*`, video/audio/image/PDF/thumbnail/YT pages — no logic, UI, or styling edits
+- `supabase/functions/**` — no changes
+- `src/integrations/supabase/**` — no changes
+- Theme tokens, sidebar, design system — no changes
+- Database / auth — none required
+
+---
+
+### File Map
+
+**New:** `AuthorProfilePage.tsx`, `FounderPage.tsx`, `EditorialTeamPage.tsx`, `ContentReviewProcessPage.tsx`, `CategoryPage.tsx`, `ReadingProgressBar.tsx`, `Breadcrumbs.tsx`, `AuthorBioCard.tsx`, `RelatedArticles.tsx`, `SEO.tsx`, `src/lib/seo/jsonLd.ts`, `src/data/authors.ts`.
+
+**Edited:** `blogArticles.ts` (+7 articles, extended type), `App.tsx` (routes), `main.tsx` (HelmetProvider), `Footer.tsx` (links), `HomePage.tsx` (trust sections), `BlogPage.tsx` (UX additions), `index.html` (Organization/WebSite JSON-LD + remove duplicate canonical), `public/sitemap.xml`.
+
+**Dependency:** `react-helmet-async` (only addition).
+
+---
+
+### Deliverable
+
+After implementation, you get: 7 new authority articles live in blog, 5 new trust pages, schema on every route, unique meta per page, rebuilt homepage trust layer, and a fresh AdSense readiness report — with zero changes to any working tool.

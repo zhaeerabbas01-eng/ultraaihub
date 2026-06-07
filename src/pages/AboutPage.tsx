@@ -2,15 +2,30 @@ import { PageHeader } from "@/components/PageHeader";
 import { Building2, Mail, Globe, Users, ShieldCheck, BookCheck, Sparkles, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { SEO } from "@/components/SEO";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto">
+      <SEO
+        title="About Ultra Media AI Hub — MUTECH BAAR & Muhammad Usman Zaheer"
+        description="About Ultra Media AI Hub: independent AI media tools and editorial publication by MUTECH BAAR, founded by Muhammad Usman Zaheer."
+        path="/about"
+      />
+      <Breadcrumbs items={[{ label: "About" }]} />
       <PageHeader
         icon={<Building2 className="h-5 w-5" />}
         title="About Ultra Media AI Hub"
         description="An independent AI tools platform built and edited by working creators — not a content farm."
       />
+
+      <div className="mb-4 flex flex-wrap gap-3 text-sm">
+        <Link to="/founder" className="text-primary hover:underline">Founder profile →</Link>
+        <Link to="/editorial-team" className="text-primary hover:underline">Editorial team →</Link>
+        <Link to="/content-review-process" className="text-primary hover:underline">Content review process →</Link>
+      </div>
+
 
       <div className="space-y-6">
         {/* Mission */}

@@ -28,6 +28,11 @@ import HelpPage from "./pages/HelpPage";
 import DmcaPage from "./pages/DmcaPage";
 import EditorialPolicyPage from "./pages/EditorialPolicyPage";
 import AiPolicyPage from "./pages/AiPolicyPage";
+import AuthorProfilePage from "./pages/AuthorProfilePage";
+import FounderPage from "./pages/FounderPage";
+import EditorialTeamPage from "./pages/EditorialTeamPage";
+import ContentReviewProcessPage from "./pages/ContentReviewProcessPage";
+import CategoryPage from "./pages/CategoryPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,7 +46,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/video-downloader" element={<VideoDownloaderPage />} />
-            
             <Route path="/audio-converter" element={<AudioConverterPage />} />
             <Route path="/image-tools" element={<ImageToolsPage />} />
             <Route path="/upscaler" element={<UpscalerPage />} />
@@ -64,6 +68,11 @@ const App = () => (
             <Route path="/dmca" element={<DmcaPage />} />
             <Route path="/editorial-policy" element={<EditorialPolicyPage />} />
             <Route path="/ai-policy" element={<AiPolicyPage />} />
+            <Route path="/founder" element={<FounderPage />} />
+            <Route path="/editorial-team" element={<EditorialTeamPage />} />
+            <Route path="/content-review-process" element={<ContentReviewProcessPage />} />
+            <Route path="/author/:slug" element={<AuthorProfilePage />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
