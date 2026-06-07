@@ -9,6 +9,9 @@ export function Footer() {
             <h4 className="font-display font-bold text-foreground mb-4">Company</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link to="/founder" className="text-muted-foreground hover:text-primary transition-colors">Founder</Link></li>
+              <li><Link to="/editorial-team" className="text-muted-foreground hover:text-primary transition-colors">Editorial Team</Link></li>
+              <li><Link to="/content-review-process" className="text-muted-foreground hover:text-primary transition-colors">Content Review Process</Link></li>
               <li><Link to="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
               <li><Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
             </ul>

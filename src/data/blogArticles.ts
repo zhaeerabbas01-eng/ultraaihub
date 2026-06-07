@@ -1,3 +1,5 @@
+import { authorityArticles } from "./authorityArticles";
+
 export interface BlogArticle {
   slug: string;
   title: string;
@@ -10,6 +12,10 @@ export interface BlogArticle {
   category: string;
   readTime: string;
   content: string;
+  lastUpdated?: string;
+  authorSlug?: string;
+  tags?: string[];
+  relatedSlugs?: string[];
 }
 
 export const blogArticles: BlogArticle[] = [
@@ -1171,5 +1177,7 @@ export const blogArticles: BlogArticle[] = [
 <h2>Final Thought</h2>
 <p>The websites quietly winning in 2026 are not the ones that figured out a magic AI prompt. They are the ones that combined AI's speed with human judgment, real experience, and patient publishing. That is the entire trick.</p>`,
   },
+  ...authorityArticles,
 ];
+
 
