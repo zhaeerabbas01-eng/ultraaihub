@@ -1,3 +1,5 @@
+import founderPhoto from "@/assets/founder-usman.png.asset.json";
+
 export interface Author {
   slug: string;
   name: string;
@@ -6,6 +8,7 @@ export interface Author {
   expertise: string[];
   email?: string;
   initials: string;
+  image?: string;
 }
 
 export const authors: Author[] = [
@@ -23,6 +26,7 @@ export const authors: Author[] = [
     ],
     email: "zhaeerabbas01@gmail.com",
     initials: "UZ",
+    image: founderPhoto.url,
   },
   {
     slug: "editorial-team",

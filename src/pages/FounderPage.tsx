@@ -29,8 +29,13 @@ export default function FounderPage() {
       <Breadcrumbs items={[{ label: "About", to: "/about" }, { label: "Founder" }]} />
       <PageHeader icon={<Award className="h-5 w-5" />} title="Meet the Founder" description="Muhammad Usman Zaheer · Founder & CEO, MUTECH BAAR" />
 
-      <div className="glass-panel rounded-xl p-6 mb-6 flex items-start gap-5">
-        <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center font-display font-bold text-primary text-3xl flex-shrink-0">UZ</div>
+      <div className="glass-panel rounded-xl p-6 mb-6 flex flex-col sm:flex-row items-start gap-5">
+        <img
+          src="/__l5e/assets-v1/225c5f66-f298-4f76-8ce0-ed254cf64932/founder-usman.png"
+          alt="Muhammad Usman Zaheer — Founder & CEO, MUTECH BAAR"
+          loading="lazy"
+          className="h-32 w-32 rounded-2xl object-cover ring-2 ring-primary/40 shadow-lg flex-shrink-0"
+        />
         <div>
           <h2 className="font-display text-2xl font-bold text-foreground">{founder.name}</h2>
           <p className="text-primary">{founder.role}</p>
