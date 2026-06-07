@@ -43,9 +43,12 @@ export default function AboutPage() {
         <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-panel rounded-xl p-8">
           <h2 className="font-display text-2xl font-bold text-foreground mb-4">Meet the Founder</h2>
           <div className="flex flex-col sm:flex-row gap-5 items-start">
-            <div className="h-20 w-20 rounded-full bg-primary/20 flex items-center justify-center text-primary text-2xl font-display font-bold shrink-0">
-              MU
-            </div>
+            <img
+              src="/__l5e/assets-v1/225c5f66-f298-4f76-8ce0-ed254cf64932/founder-usman.png"
+              alt="Muhammad Usman Zaheer — Founder of MUTECH BAAR and Ultra Media AI Hub"
+              loading="lazy"
+              className="h-28 w-28 sm:h-32 sm:w-32 rounded-2xl object-cover ring-2 ring-primary/40 shadow-lg shrink-0"
+            />
             <div className="text-muted-foreground text-sm leading-relaxed space-y-3">
               <p>
                 <strong className="text-foreground">Muhammad Usman Zaheer</strong> — Founder &amp; lead engineer, MUTECH BAAR. Background in full-stack web development and applied AI, with hands-on experience in YouTube content production, media processing pipelines, and client-side image/audio tooling.
