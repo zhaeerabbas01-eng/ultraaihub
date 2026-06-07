@@ -26,6 +26,7 @@ export const authors: Author[] = [
     ],
     email: "zhaeerabbas01@gmail.com",
     initials: "UZ",
+    image: founderPhoto.url,
   },
   {
     slug: "editorial-team",
