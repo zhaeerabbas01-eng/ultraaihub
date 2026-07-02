@@ -30,32 +30,45 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function enhancePrompt(simple: string, size?: string, titleText?: string): string {
-  const sizeHint = size ? `, ${size} aspect ratio` : "";
+  const sizeHint = size ? `, ${size} aspect ratio (YouTube/social safe margins)` : "";
   const titleLine = titleText && titleText.trim()
-    ? `\nOn-thumbnail headline (render EXACTLY this text, max 3-5 words, bold 3D typography): "${titleText.trim()}"`
-    : `\nOn-thumbnail headline: extract a punchy 3-5 word headline from the topic and render it in bold 3D typography.`;
+    ? `\nOn-thumbnail headline — render EXACTLY this text (preserve wording, spelling, case; do NOT translate or rewrite), 2–5 words, huge bold 3D typography with black outline + heavy drop shadow, white/yellow/red fill for maximum mobile readability: "${titleText.trim()}"`
+    : `\nOn-thumbnail headline: extract a punchy 2–5 word viral English hook from the topic (e.g. "AI Changed Everything", "$10K/Month", "Don't Miss This", "Secret Strategy"). Render in huge bold 3D typography with black outline + heavy shadow, white/yellow/red fill.`;
 
-  return `You are a world-class viral YouTube thumbnail designer specializing in SaaS, tech, AI, and business niches (MrBeast + Shopify + Apple keynote energy).
+  return `ROLE: You are an elite AI Thumbnail Prompt Engineer and Viral Thumbnail Strategist producing ONE final flat thumbnail image ready to upload.
 
-Topic: ${simple}${sizeHint}${titleLine}
+UNIVERSAL LANGUAGE: The user topic may be in ANY language (English, Urdu, Hindi, Arabic, Spanish, French, German, Chinese, Japanese, Korean, Russian, Portuguese, Turkish, Bengali, Tamil, Telugu, Punjabi, etc.). Detect the language, understand intent, and internally translate the topic to English — AI image models render English concepts most accurately. NEVER refuse based on language.
 
-VISUAL STYLE (mandatory):
-- If a reference image is provided, use it as the main subject — preserve face identity, make expression EXTREMELY emotional (shock, awe, excitement, success, confidence)
-- Background: dark futuristic tech / neon gradient / SaaS dashboard aesthetic (deep navy, electric blue, neon green, magenta highlights)
-- Add glowing UI elements: ecommerce dashboards, analytics graphs going up, store interfaces, payment icons, charts, KPI cards — translucent and floating
-- Bold 3D extruded typography for the headline, glossy plastic or metallic feel, drop shadow + outer glow
-- Color palette: high contrast — neon yellow, hot red, neon green, electric blue glow on dark background
-- Add attention motifs: red/yellow circles around subject's face, bold arrows pointing at money/graphs, white highlight strokes
-- Optional small icons (only if topic-relevant): shopping cart, dollar sign, padlock, rocket, lightning bolt
-- Urgency cues if topic implies it: "FREE", "$0", "NEW", "NOW" badges with star-burst backgrounds
-- Composition: subject on one side (rule of thirds), big text on the other, dashboard/graph elements layered behind
-- Hyper-realistic photo + motion-graphics hybrid; cinematic key lighting; sharp focus; shallow depth of field
-- 4K ultra-crisp, no blur, no low-res artifacts, no watermark, no fake logos
+TOPIC (any language): ${simple}${sizeHint}${titleLine}
 
-Goal: Looks like a viral SaaS startup launch ad / Shopify alternative / AI tool reveal — maximum click-through rate.
+AUTO CATEGORY DETECTION: Identify the niche (Finance, Business, Investing, AI, Tech, Programming, Motivation, Self-Improvement, Education, History, Documentary, Crime, Mystery, Horror, Gaming, Sports, Football, Cricket, UFC, News, Politics, Health, Fitness, Medical, Food, Travel, Nature, Wildlife, Real Estate, Luxury, Cars, Motorcycles, Fashion, Beauty, Kids, Animation, Movie Review, Celebrity, Podcast, Vlog, Tutorial, Product Review, Ecommerce, Crypto, SaaS, Cybersecurity, Cloud, etc.) and adapt style accordingly.
 
-Output: ONE final flat thumbnail image, ready to upload to YouTube.`;
+HIGH-CPM UPGRADE: If the topic falls in Finance / Investing / Stocks / Trading / AI / Software / Business / Insurance / Real Estate / Legal / Marketing / SEO / Credit Cards / Taxes / Passive Income / SaaS / Cybersecurity / Cloud / Enterprise — automatically apply a premium look: luxury palette, corporate authority, expensive lighting, trust-building composition.
+
+VIRAL CTR RULES (mandatory):
+- Large expressive face with strong emotion (shock, awe, excitement, confidence, curiosity, urgency) — unless topic is object-focused.
+- Clear visual story: conflict, transformation, before-vs-after, big-object focus, or mystery hook.
+- Rule-of-thirds composition, subject on one side, headline on the other, strong foreground/background separation.
+- Cinematic key lighting, dramatic contrast, shallow depth of field, sharp micro-detail, crisp edges.
+- Bold high-contrast colors selected by topic psychology (blue = business/trust, gold = luxury, red = urgency, green = finance/growth, purple = AI/tech, orange = energy, dark cinematic = mystery/crime/horror).
+- Add attention motifs when they help: red/yellow circles around the subject's face, arrows pointing to money/graphs, glowing UI/dashboard overlays, sparks, light rays, chart lines going up.
+- Minimal clutter — maximum readability on a small mobile preview.
+
+STYLE (auto-pick best fit): Photorealistic / Hyper-Realistic / Cinematic / 3D / Digital Art / Documentary / Luxury / Corporate / Gaming / Anime / Illustration / Fantasy / Sci-fi.
+
+HUMAN SUBJECTS:
+- If a reference face image is provided: preserve identity, hair, skin tone, clothes, pose, camera angle, and lighting exactly. Only intensify the expression to match the emotional beat of the topic.
+- If no face is provided: generate the most fitting subject automatically (person, object, scenery, product) for the detected niche.
+
+BACKGROUND: Always highly relevant to the topic — never random. Reinforce the story (dashboard/charts for finance, neon circuits for AI, stadium for sports, kitchen for food, luxury interior for real estate, dark alley for crime, etc.).
+
+QUALITY: Ultra HD, 8K, hyper-detailed, professional commercial quality, perfect skin, natural reflections, crisp typography.
+
+NEGATIVE (avoid): low quality, blur, noise, JPEG artifacts, extra fingers, bad anatomy, distorted faces, cropped heads, duplicate objects, flat lighting, low contrast, watermarks, fake logos, misspelled text, unreadable text, messy composition, overexposure, underexposure.
+
+OUTPUT: ONE final flat 16:9-style thumbnail image (or the requested aspect ratio), print-ready and optimized for maximum click-through rate on YouTube and social feeds. No borders, no frames, no letterboxing.`;
 }
+
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
