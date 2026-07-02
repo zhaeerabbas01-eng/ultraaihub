@@ -97,8 +97,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("cf-connecting-ip") || "unknown";
+  const clientIp = req.headers.get("cf-connecting-ip") || "unknown";
 
   if (isRateLimited(clientIp)) {
     return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again later." }), {

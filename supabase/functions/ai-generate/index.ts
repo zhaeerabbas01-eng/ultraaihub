@@ -60,9 +60,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Rate limiting by IP
-    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
-                     req.headers.get("cf-connecting-ip") || "unknown";
+    // Rate limiting by trusted Cloudflare-provided IP only (x-forwarded-for is spoofable)
+    const clientIP = req.headers.get("cf-connecting-ip") || "unknown";
     if (!checkRateLimit(clientIP)) {
       return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
