@@ -229,7 +229,7 @@ export default function ThumbnailGeneratorPage() {
         {!active ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="glass-panel rounded-3xl p-10 text-center flex-1 flex flex-col items-center justify-center"
+            className="glass-panel rounded-3xl p-10 text-center flex-1 flex flex-col items-center justify-center border-2 border-yellow-400/70 shadow-[0_0_28px_-6px_rgba(250,204,21,0.35)]"
           >
             <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
               <Sparkles className="h-8 w-8" />
