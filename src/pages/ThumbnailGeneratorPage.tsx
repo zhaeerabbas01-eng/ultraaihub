@@ -243,7 +243,7 @@ export default function ThumbnailGeneratorPage() {
           <motion.div
             key={active.id}
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="glass-panel rounded-3xl p-3 sm:p-4 space-y-3"
+            className="glass-panel rounded-3xl p-3 sm:p-4 space-y-3 border-2 border-yellow-400/70 shadow-[0_0_28px_-6px_rgba(250,204,21,0.35)]"
           >
             {/* Image / state */}
             {active.loading ? (
