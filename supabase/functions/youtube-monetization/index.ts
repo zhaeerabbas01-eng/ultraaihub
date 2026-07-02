@@ -58,8 +58,23 @@ async function resolveChannelId(KEY: string, ref: { type: string; value: string 
   return sd.items?.[0]?.snippet?.channelId || sd.items?.[0]?.id?.channelId || null;
 }
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const e = rateLimitMap.get(ip);
+  if (!e || now > e.resetAt) { rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 }); return true; }
+  e.count++;
+  return e.count <= 30;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const clientIP = req.headers.get("cf-connecting-ip") || "unknown";
+  if (!checkRateLimit(clientIP)) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again later." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   const KEY = Deno.env.get("YOUTUBE_API_KEY");
   if (!KEY) return new Response(JSON.stringify({ error: "YouTube API key not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
