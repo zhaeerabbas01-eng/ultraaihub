@@ -191,8 +191,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("cf-connecting-ip") || "unknown";
+    const clientIP = req.headers.get("cf-connecting-ip") || "unknown";
     if (!checkRateLimit(clientIP)) {
       return new Response(JSON.stringify({ error: "Rate limited. Please wait a moment and try again." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
