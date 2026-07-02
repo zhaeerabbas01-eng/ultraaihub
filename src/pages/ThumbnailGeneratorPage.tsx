@@ -339,7 +339,7 @@ export default function ThumbnailGeneratorPage() {
 
       {/* Unified Composer (Gemini-style) */}
       <div className="sticky bottom-3 z-10">
-        <div className="glass-panel rounded-3xl p-3 shadow-xl border-border/60 backdrop-blur-xl">
+        <div className="glass-panel rounded-3xl p-3 shadow-xl border-2 border-yellow-400/80 shadow-[0_0_28px_-6px_rgba(250,204,21,0.45)] backdrop-blur-xl">
           {/* YouTube row */}
           <AnimatePresence>
             {showYt && (
