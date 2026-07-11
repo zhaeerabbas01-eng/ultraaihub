@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Download, Music, Image, Maximize, Minimize2, Wand2, Tag, DollarSign, Calculator, Trash2, ArrowRight, Sparkles, Zap, Shield, CheckCircle, Globe, Star, Users, BookOpen, Target, ClipboardCheck, Heart } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import { TrustedBy } from "@/components/TrustedBy";
+import { ThumbnailShowcase } from "@/components/ThumbnailShowcase";
 import { SEO } from "@/components/SEO";
 import { blogArticles } from "@/data/blogArticles";
 
@@ -74,6 +75,11 @@ export default function HomePage() {
           </Link>
         </div>
       </motion.div>
+
+      {/* AI Thumbnail Studio showcase */}
+      <ThumbnailShowcase />
+
+
 
       {/* Stats */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
