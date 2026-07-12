@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Wand2, Download, Loader2, Sparkles, X, Upload, User, Link as LinkIcon,
-  Maximize2, Copy, RefreshCw, Share2, Trash2, ChevronDown, ChevronUp, Image as ImageIcon,
+  Maximize2, Copy, RefreshCw, Share2, Trash2, Image as ImageIcon,
+  Plus, ArrowUp, Settings2, Type, Palette, Languages, Ratio, Layers, Ban,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
