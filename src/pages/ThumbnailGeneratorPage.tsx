@@ -268,37 +268,20 @@ export default function ThumbnailGeneratorPage() {
 
       {/* Split layout */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,35fr)_minmax(0,65fr)]">
-        {/* LEFT: Controls */}
+        {/* LEFT: Gemini-style unified composer */}
         <motion.aside
           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 shadow-[0_0_40px_-15px_rgba(34,211,238,0.4)] space-y-4 h-fit lg:sticky lg:top-4"
+          className="space-y-3 h-fit lg:sticky lg:top-4"
         >
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block">Prompt</Label>
-            <Textarea
-              value={prompt} onChange={e => setPrompt(e.target.value)}
-              placeholder="Describe your thumbnail — any language. E.g. 'Shocked developer face, glowing laptop, neon SaaS launch banner'"
-              rows={4}
-              className="bg-black/40 border-white/10 focus:border-cyan-400/60 focus:ring-cyan-400/30 resize-none text-sm"
-            />
-          </div>
+          <input ref={refInputRef} type="file" accept="image/*" multiple hidden onChange={e => { handleRefFiles(e.target.files); e.target.value = ""; }} />
+          <input ref={faceInputRef} type="file" accept="image/*" hidden onChange={e => { handleFaceFile(e.target.files); e.target.value = ""; }} />
 
-          <div className="grid grid-cols-2 gap-2">
-            <input ref={refInputRef} type="file" accept="image/*" multiple hidden onChange={e => { handleRefFiles(e.target.files); e.target.value = ""; }} />
-            <input ref={faceInputRef} type="file" accept="image/*" hidden onChange={e => { handleFaceFile(e.target.files); e.target.value = ""; }} />
-            <Button variant="outline" size="sm" onClick={() => refInputRef.current?.click()} className="border-white/10 bg-black/30 hover:bg-white/5 justify-start">
-              <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload Image
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => faceInputRef.current?.click()} className="border-white/10 bg-black/30 hover:bg-white/5 justify-start">
-              <User className="h-3.5 w-3.5 mr-1.5" /> Upload Face
-            </Button>
-          </div>
-
+          {/* Attachment chips (above bubble) */}
           {(refImages.length > 0 || faceImage) && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 px-2">
               {refImages.map(r => (
                 <div key={r.id} className="relative group">
-                  <img src={r.url} alt={r.name} className="h-12 w-12 rounded-lg object-cover ring-1 ring-white/10" />
+                  <img src={r.url} alt={r.name} className="h-14 w-14 rounded-xl object-cover ring-1 ring-white/10" />
                   <button onClick={() => setRefImages(p => p.filter(x => x.id !== r.id))} className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white p-0.5">
                     <X className="h-2.5 w-2.5" />
                   </button>
@@ -306,7 +289,7 @@ export default function ThumbnailGeneratorPage() {
               ))}
               {faceImage && (
                 <div className="relative">
-                  <img src={faceImage.url} alt="face" className="h-12 w-12 rounded-lg object-cover ring-2 ring-cyan-400/70" />
+                  <img src={faceImage.url} alt="face" className="h-14 w-14 rounded-xl object-cover ring-2 ring-cyan-400/70" />
                   <button onClick={() => setFaceImage(null)} className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white p-0.5">
                     <X className="h-2.5 w-2.5" />
                   </button>
@@ -316,90 +299,115 @@ export default function ThumbnailGeneratorPage() {
             </div>
           )}
 
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block flex items-center gap-1.5">
-              <LinkIcon className="h-3 w-3" /> YouTube URL
-            </Label>
-            <div className="flex gap-2">
-              <Input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="bg-black/40 border-white/10 text-sm" />
-              <Button size="sm" variant="secondary" onClick={importYouTube}>Import</Button>
+          {/* Unified Gemini-style bubble */}
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_40px_-15px_rgba(34,211,238,0.4)] focus-within:border-cyan-400/50 focus-within:shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)] transition-all">
+            <Textarea
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate(); }}
+              placeholder="Describe your thumbnail in any language…"
+              rows={3}
+              className="bg-transparent border-0 focus-visible:ring-0 resize-none text-sm px-5 pt-4 pb-2 min-h-[92px]"
+            />
+
+            {/* Bottom bar */}
+            <div className="flex items-center justify-between gap-2 px-3 pb-3">
+              <div className="flex items-center gap-1">
+                {/* + menu with all options */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-white/10">
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-72 p-2 bg-background/95 backdrop-blur-xl border-white/10">
+                    <div className="grid grid-cols-2 gap-1">
+                      <button onClick={() => refInputRef.current?.click()} className="flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-white/5 text-left">
+                        <Upload className="h-4 w-4 text-cyan-300" /> Upload Image
+                      </button>
+                      <button onClick={() => faceInputRef.current?.click()} className="flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-white/5 text-left">
+                        <User className="h-4 w-4 text-fuchsia-300" /> Face Image
+                      </button>
+                    </div>
+                    <div className="my-2 h-px bg-white/10" />
+                    <div className="space-y-2">
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><LinkIcon className="h-3 w-3" /> YouTube URL</Label>
+                        <div className="flex gap-1">
+                          <Input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="youtube.com/watch?v=…" className="bg-black/40 border-white/10 text-xs h-8" />
+                          <Button size="sm" variant="secondary" onClick={importYouTube} className="h-8 px-2 text-xs">Import</Button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Type className="h-3 w-3" /> Title (optional)</Label>
+                        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bold headline on thumbnail" maxLength={40} className="bg-black/40 border-white/10 text-xs h-8" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Palette className="h-3 w-3" /> Style</Label>
+                          <Select value={style} onValueChange={setStyle}>
+                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>{styleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Languages className="h-3 w-3" /> Language</Label>
+                          <Select value={language} onValueChange={setLanguage}>
+                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>{languageOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Ratio className="h-3 w-3" /> Ratio</Label>
+                          <Select value={size} onValueChange={setSize}>
+                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>{sizeOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Layers className="h-3 w-3" /> Variations</Label>
+                          <Select value={String(variations)} onValueChange={v => setVariations(Number(v))}>
+                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>{[1, 2, 3, 4].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Ban className="h-3 w-3" /> Negative Prompt</Label>
+                        <Textarea value={negative} onChange={e => setNegative(e.target.value)} placeholder="blurry, low quality, extra fingers…" rows={2} className="bg-black/40 border-white/10 text-xs resize-none" />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Quick chips */}
+                <div className="hidden sm:flex items-center gap-1 ml-1 text-[11px]">
+                  <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{size}</span>
+                  <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{style}</span>
+                  {variations > 1 && <span className="rounded-full px-2 py-1 bg-cyan-400/15 text-cyan-300">×{variations}</span>}
+                  {(refImages.length + (faceImage ? 1 : 0)) > 0 && (
+                    <span className="rounded-full px-2 py-1 bg-fuchsia-400/15 text-fuchsia-300">📎 {refImages.length + (faceImage ? 1 : 0)}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Send */}
+              <Button
+                onClick={handleGenerate}
+                disabled={generating || !prompt.trim()}
+                size="icon"
+                className="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 hover:opacity-90 text-slate-950 shadow-[0_0_25px_-4px_rgba(34,211,238,0.7)] disabled:opacity-40"
+              >
+                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+              </Button>
             </div>
           </div>
 
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block">Thumbnail Title (optional)</Label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bold headline on thumbnail" maxLength={40} className="bg-black/40 border-white/10 text-sm" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block">Style</Label>
-              <Select value={style} onValueChange={setStyle}>
-                <SelectTrigger className="bg-black/40 border-white/10 text-sm h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{styleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block">Language</Label>
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="bg-black/40 border-white/10 text-sm h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{languageOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block">Aspect Ratio</Label>
-              <Select value={size} onValueChange={setSize}>
-                <SelectTrigger className="bg-black/40 border-white/10 text-sm h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{sizeOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-cyan-300/80 mb-1.5 block">Variations</Label>
-              <Select value={String(variations)} onValueChange={v => setVariations(Number(v))}>
-                <SelectTrigger className="bg-black/40 border-white/10 text-sm h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{[1, 2, 3, 4].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Collapsibles */}
-          <button onClick={() => setShowNegative(v => !v)} className="w-full flex items-center justify-between text-xs text-cyan-300/80 hover:text-cyan-300 pt-2">
-            <span className="uppercase tracking-wider">Negative Prompt</span>
-            {showNegative ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          </button>
-          <AnimatePresence>{showNegative && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-              <Textarea value={negative} onChange={e => setNegative(e.target.value)} placeholder="Blurry, low quality, extra fingers, watermark..." rows={2} className="bg-black/40 border-white/10 text-sm resize-none" />
-            </motion.div>
-          )}</AnimatePresence>
-
-          <button onClick={() => setShowAdvanced(v => !v)} className="w-full flex items-center justify-between text-xs text-cyan-300/80 hover:text-cyan-300">
-            <span className="uppercase tracking-wider">Advanced Settings</span>
-            {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          </button>
-          <AnimatePresence>{showAdvanced && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="text-xs text-muted-foreground bg-black/20 rounded-lg p-3 space-y-1">
-              <p>• References sent: <b>{refImages.length + (faceImage ? 1 : 0)}</b></p>
-              <p>• Output size: <b>{sizeOptions.find(s => s.value === size)?.w}×{sizeOptions.find(s => s.value === size)?.h}</b></p>
-              <p>• Model: <b>Gemini 3.1 Flash Image (via Lovable AI)</b></p>
-            </motion.div>
-          )}</AnimatePresence>
-
-          {/* CTA */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={handleGenerate}
-              disabled={generating || !prompt.trim()}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-cyan-400 via-sky-500 to-fuchsia-500 hover:opacity-90 text-slate-950 shadow-[0_0_40px_-8px_rgba(34,211,238,0.8)] rounded-2xl"
-            >
-              {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-              {generating ? "Generating…" : "Generate Thumbnail"}
-            </Button>
-          </motion.div>
+          <p className="text-[10px] text-center text-muted-foreground px-2">
+            Tap <Plus className="inline h-3 w-3" /> for uploads, style, language, ratio & more · ⌘/Ctrl + Enter to generate
+          </p>
         </motion.aside>
+
 
         {/* RIGHT: Preview */}
         <motion.section
