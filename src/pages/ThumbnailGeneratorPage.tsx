@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Wand2, Download, Loader2, Sparkles, X, Upload, User, Link as LinkIcon,
-  Maximize2, Copy, RefreshCw, Share2, Trash2, Image as ImageIcon,
-  Plus, ArrowUp, Settings2, Type, Palette, Languages, Ratio, Layers, Ban,
+  Maximize2, Copy, RefreshCw, Share2, Image as ImageIcon,
+  Plus, ArrowUp, SlidersHorizontal, Type, Palette, Languages, Ratio, Layers, Ban,
+  Trash2,
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,72 +19,43 @@ import { SEO } from "@/components/SEO";
 import demoVideo from "@/assets/thumb-magic.mp4.asset.json";
 
 const sizeOptions = [
-  { value: "16:9", label: "16:9 YouTube", w: 1280, h: 720 },
-  { value: "1:1", label: "1:1 Square", w: 1080, h: 1080 },
-  { value: "9:16", label: "9:16 Shorts", w: 1080, h: 1920 },
-  { value: "4:3", label: "4:3 Standard", w: 1280, h: 960 },
-  { value: "21:9", label: "21:9 Ultra", w: 1680, h: 720 },
+  { value: "16:9", label: "16:9 YouTube" },
+  { value: "1:1", label: "1:1 Square" },
+  { value: "9:16", label: "9:16 Shorts" },
+  { value: "4:3", label: "4:3 Standard" },
+  { value: "21:9", label: "21:9 Ultra" },
 ];
-
-const styleOptions = [
-  "Cinematic", "Hyper-real", "3D Render", "Anime", "Cartoon", "MrBeast Viral",
-  "Tech / SaaS Ad", "Gaming", "Vlog", "News", "Minimal Clean", "Retro / Vintage",
-];
-
-const languageOptions = [
-  "Auto-detect", "English", "Urdu", "Hindi", "Arabic", "Spanish", "French",
-  "German", "Portuguese", "Chinese", "Japanese", "Korean", "Russian", "Turkish",
-];
+const styleOptions = ["Cinematic", "Hyper-real", "3D Render", "Anime", "Cartoon", "MrBeast Viral", "Tech / SaaS Ad", "Gaming", "Vlog", "News", "Minimal Clean", "Retro / Vintage"];
+const languageOptions = ["Auto-detect", "English", "Urdu", "Hindi", "Arabic", "Spanish", "French", "German", "Portuguese", "Chinese", "Japanese", "Korean", "Russian", "Turkish"];
 
 const loadingMessages = [
-  "🧠 Understanding your prompt…",
-  "🎨 Composing scene & subjects…",
-  "✨ Enhancing lighting & color…",
-  "😊 Refining facial expression…",
-  "🚀 Optimizing for maximum CTR…",
-  "📸 Rendering final thumbnail…",
+  "Understanding your prompt…",
+  "Composing scene & subjects…",
+  "Enhancing lighting & color…",
+  "Refining facial expression…",
+  "Optimizing for maximum CTR…",
+  "Rendering final thumbnail…",
 ];
 
-type GenItem = {
-  id: string;
-  prompt: string;
-  size: string;
-  title?: string;
-  imageUrl?: string;
-  loading?: boolean;
-  error?: string;
-  fallback?: boolean;
-};
+type Msg =
+  | { id: string; role: "user"; text: string; title?: string; size: string; style: string; refs: string[]; face?: string }
+  | { id: string; role: "assistant"; size: string; imageUrl?: string; loading?: boolean; error?: string; fallback?: boolean; sourceUserId: string };
 
 const fileToDataUrl = (file: File) =>
-  new Promise<string>((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result as string);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-
+  new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(file); });
 const urlToDataUrl = async (url: string) => {
   const b = await (await fetch(url)).blob();
-  return await new Promise<string>((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result as string);
-    r.onerror = rej;
-    r.readAsDataURL(b);
-  });
+  return await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(b); });
 };
-
 const downloadDataUrl = async (dataUrl: string, filename: string) => {
   const blob = await (await fetch(dataUrl)).blob();
   const u = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = u; a.download = filename;
+  const a = document.createElement("a"); a.href = u; a.download = filename;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(u), 1000);
 };
 
 export default function ThumbnailGeneratorPage() {
-  // Inputs
   const [prompt, setPrompt] = useState("");
   const [title, setTitle] = useState("");
   const [ytUrl, setYtUrl] = useState("");
@@ -92,30 +64,26 @@ export default function ThumbnailGeneratorPage() {
   const [size, setSize] = useState("16:9");
   const [variations, setVariations] = useState(1);
   const [negative, setNegative] = useState("");
-  const [showNegative, setShowNegative] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [refImages, setRefImages] = useState<{ id: string; url: string; name: string }[]>([]);
   const [faceImage, setFaceImage] = useState<{ url: string; name: string } | null>(null);
 
-  // State
-  const [items, setItems] = useState<GenItem[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [generating, setGenerating] = useState(false);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [lightbox, setLightbox] = useState<{ url: string; size: string } | null>(null);
 
   const refInputRef = useRef<HTMLInputElement>(null);
   const faceInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const active = items.find(i => i.id === activeId) || items[items.length - 1];
-
-  // Rotate loading messages + progress
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [messages, generating]);
+  useEffect(() => { textareaRef.current?.focus(); }, []);
   useEffect(() => {
-    if (!generating) { setLoadingMsgIdx(0); setProgress(0); return; }
-    const msgTimer = setInterval(() => setLoadingMsgIdx(i => (i + 1) % loadingMessages.length), 1400);
-    const progTimer = setInterval(() => setProgress(p => (p < 92 ? p + Math.random() * 5 : p)), 400);
-    return () => { clearInterval(msgTimer); clearInterval(progTimer); };
+    if (!generating) { setLoadingMsgIdx(0); return; }
+    const t = setInterval(() => setLoadingMsgIdx(i => (i + 1) % loadingMessages.length), 1400);
+    return () => clearInterval(t);
   }, [generating]);
 
   const handleRefFiles = useCallback(async (files: FileList | null) => {
@@ -150,8 +118,8 @@ export default function ThumbnailGeneratorPage() {
     } catch (e: any) { toast.error(e.message || "Failed to import"); }
   };
 
-  const buildPrompt = () => {
-    const parts = [prompt.trim()];
+  const buildPrompt = (text: string) => {
+    const parts = [text.trim()];
     if (style) parts.push(`Style: ${style}.`);
     if (language && language !== "Auto-detect") parts.push(`Language of text: ${language}.`);
     if (negative.trim()) parts.push(`Avoid: ${negative.trim()}.`);
@@ -159,42 +127,43 @@ export default function ThumbnailGeneratorPage() {
     return parts.filter(Boolean).join(" ");
   };
 
-  const generateOne = async (idx: number, total: number) => {
-    const id = crypto.randomUUID();
-    const item: GenItem = { id, prompt: buildPrompt(), size, title: title.trim() || undefined, loading: true };
-    setItems(p => [...p, item]);
-    setActiveId(id);
-    const refs = [...refImages.map(r => r.url), ...(faceImage ? [faceImage.url] : [])];
-    try {
-      const { data, error } = await supabase.functions.invoke("ai-thumbnail-generate", {
-        body: {
-          prompt: `${item.prompt}${total > 1 ? ` (Variation ${idx + 1} of ${total} — vary composition & angle)` : ""}`,
-          size,
-          referenceImages: refs,
-          titleText: title.trim() || undefined,
-        },
-      });
-      if (error) throw error;
-      if (!data?.imageUrl) throw new Error("No image returned");
-      setItems(p => p.map(m => m.id === id ? { ...m, loading: false, imageUrl: data.imageUrl, fallback: !!data.fallback } : m));
-      if (data.fallback) toast.warning(data.message || "Fallback shown");
-    } catch (e: any) {
-      setItems(p => p.map(m => m.id === id ? { ...m, loading: false, error: e.message || "Failed" } : m));
-      throw e;
-    }
-  };
-
-  const handleGenerate = async () => {
-    if (!prompt.trim()) { toast.error("Describe your thumbnail"); return; }
+  const handleSend = async () => {
+    const text = prompt.trim();
+    if (!text) { toast.error("Describe your thumbnail"); return; }
+    const userId = crypto.randomUUID();
+    const userMsg: Msg = {
+      id: userId, role: "user", text, title: title.trim() || undefined, size, style,
+      refs: refImages.map(r => r.url), face: faceImage?.url,
+    };
+    setMessages(p => [...p, userMsg]);
+    setPrompt("");
     setGenerating(true);
+
+    const finalPrompt = buildPrompt(text);
+    const refs = [...refImages.map(r => r.url), ...(faceImage ? [faceImage.url] : [])];
+
     try {
-      for (let i = 0; i < variations; i++) await generateOne(i, variations);
-      setProgress(100);
-      toast.success(`${variations} thumbnail${variations > 1 ? "s" : ""} generated!`);
-    } catch (e: any) {
-      toast.error(e.message || "Generation failed");
+      for (let i = 0; i < variations; i++) {
+        const aid = crypto.randomUUID();
+        setMessages(p => [...p, { id: aid, role: "assistant", size, loading: true, sourceUserId: userId }]);
+        try {
+          const { data, error } = await supabase.functions.invoke("ai-thumbnail-generate", {
+            body: {
+              prompt: `${finalPrompt}${variations > 1 ? ` (Variation ${i + 1} of ${variations} — vary composition & angle)` : ""}`,
+              size, referenceImages: refs, titleText: title.trim() || undefined,
+            },
+          });
+          if (error) throw error;
+          if (!data?.imageUrl) throw new Error("No image returned");
+          setMessages(p => p.map(m => m.id === aid ? { ...m, loading: false, imageUrl: data.imageUrl, fallback: !!data.fallback } as Msg : m));
+          if (data.fallback) toast.warning(data.message || "Fallback shown");
+        } catch (e: any) {
+          setMessages(p => p.map(m => m.id === aid ? { ...m, loading: false, error: e.message || "Failed" } as Msg : m));
+        }
+      }
     } finally {
-      setTimeout(() => setGenerating(false), 300);
+      setGenerating(false);
+      setTimeout(() => textareaRef.current?.focus(), 100);
     }
   };
 
@@ -202,380 +171,296 @@ export default function ThumbnailGeneratorPage() {
     try { await downloadDataUrl(url, `ultra-thumbnail-${sz.replace(":", "x")}-${Date.now()}.png`); toast.success("Downloaded"); }
     catch { toast.error("Download failed"); }
   };
-
   const copyImg = async (url: string) => {
-    try {
-      const b = await (await fetch(url)).blob();
-      // @ts-ignore
-      await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]);
-      toast.success("Copied");
+    try { const b = await (await fetch(url)).blob(); // @ts-ignore
+      await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]); toast.success("Copied");
     } catch { toast.error("Copy not supported"); }
   };
-
   const shareImg = async (url: string) => {
     try {
       const b = await (await fetch(url)).blob();
       const file = new File([b], "thumbnail.png", { type: b.type });
       // @ts-ignore
-      if (navigator.canShare?.({ files: [file] })) {
-        // @ts-ignore
+      if (navigator.canShare?.({ files: [file] })) { // @ts-ignore
         await navigator.share({ files: [file], title: "Ultra Media AI Thumbnail" });
-      } else {
-        await copyImg(url);
-      }
+      } else { await copyImg(url); }
     } catch {}
   };
-
-  const reusePrompt = (it: GenItem) => {
-    setPrompt(it.prompt);
-    if (it.title) setTitle(it.title);
-    setSize(it.size);
+  const regenerate = async (sourceUserId: string) => {
+    const u = messages.find(m => m.id === sourceUserId);
+    if (!u || u.role !== "user") return;
+    setPrompt(u.text);
+    setTimeout(() => handleSend(), 0);
   };
-
-  const deleteItem = (id: string) => setItems(p => p.filter(i => i.id !== id));
+  const clearChat = () => { setMessages([]); toast.success("Chat cleared"); };
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)]">
-      <SEO title="AI Thumbnail Generator — Ultra Media AI" description="Generate high-CTR YouTube thumbnails with AI. Any language, any style, unlimited reference images." path="/thumbnail-generator" />
+    <div className="relative flex flex-col h-[calc(100vh-6rem)]">
+      <SEO title="AI Thumbnail Generator — Ultra Media AI" description="Chat with AI to generate high-CTR YouTube thumbnails in any language or style." path="/thumbnail-generator" />
 
-      {/* Animated aurora background */}
+      {/* Aurora */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 left-1/4 h-[500px] w-[500px] rounded-full bg-cyan-500/15 blur-[120px] animate-pulse" />
-        <div className="absolute top-1/2 -right-24 h-[500px] w-[500px] rounded-full bg-fuchsia-500/10 blur-[120px] animate-pulse" style={{ animationDelay: "1.5s" }} />
-        <div className="absolute bottom-0 left-1/3 h-[400px] w-[400px] rounded-full bg-sky-400/10 blur-[120px] animate-pulse" style={{ animationDelay: "2.5s" }} />
-        {/* Particles */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="absolute h-1 w-1 rounded-full bg-cyan-300/40"
-            style={{ left: `${(i * 53) % 100}%`, top: `${(i * 37) % 100}%` }}
-            animate={{ y: [0, -30, 0], opacity: [0.2, 0.8, 0.2] }}
-            transition={{ duration: 4 + (i % 5), repeat: Infinity, delay: i * 0.2 }}
-          />
-        ))}
+        <div className="absolute -top-24 left-1/4 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 right-0 h-[500px] w-[500px] rounded-full bg-fuchsia-500/10 blur-[120px] animate-pulse" style={{ animationDelay: "1.5s" }} />
       </div>
 
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center shadow-[0_0_30px_-4px_rgba(34,211,238,0.6)]">
-          <Wand2 className="h-5 w-5 text-slate-950" />
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center shadow-[0_0_25px_-4px_rgba(34,211,238,0.6)]">
+            <Wand2 className="h-5 w-5 text-slate-950" />
+          </div>
+          <div>
+            <h1 className="font-display text-lg md:text-xl font-bold leading-tight">AI Thumbnail Chat</h1>
+            <p className="text-[11px] text-muted-foreground">Describe. Generate. Download. In any language.</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">AI Thumbnail Generator</h1>
-          <p className="text-xs text-muted-foreground">Generate high-CTR YouTube thumbnails with AI · Ultra Media AI</p>
-        </div>
+        {messages.length > 0 && (
+          <Button size="sm" variant="ghost" onClick={clearChat} className="text-xs text-muted-foreground hover:text-red-300">
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
+          </Button>
+        )}
       </div>
 
-      {/* Split layout */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,35fr)_minmax(0,65fr)]">
-        {/* LEFT: Gemini-style unified composer */}
-        <motion.aside
-          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-          className="space-y-3 h-fit lg:sticky lg:top-4"
-        >
-          <input ref={refInputRef} type="file" accept="image/*" multiple hidden onChange={e => { handleRefFiles(e.target.files); e.target.value = ""; }} />
-          <input ref={faceInputRef} type="file" accept="image/*" hidden onChange={e => { handleFaceFile(e.target.files); e.target.value = ""; }} />
-
-          {/* Attachment chips (above bubble) */}
-          {(refImages.length > 0 || faceImage) && (
-            <div className="flex flex-wrap gap-2 px-2">
-              {refImages.map(r => (
-                <div key={r.id} className="relative group">
-                  <img src={r.url} alt={r.name} className="h-14 w-14 rounded-xl object-cover ring-1 ring-white/10" />
-                  <button onClick={() => setRefImages(p => p.filter(x => x.id !== r.id))} className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white p-0.5">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </div>
-              ))}
-              {faceImage && (
-                <div className="relative">
-                  <img src={faceImage.url} alt="face" className="h-14 w-14 rounded-xl object-cover ring-2 ring-cyan-400/70" />
-                  <button onClick={() => setFaceImage(null)} className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white p-0.5">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] bg-cyan-400 text-slate-950 px-1 rounded font-bold">FACE</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Unified Gemini-style bubble */}
-          <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_40px_-15px_rgba(34,211,238,0.4)] focus-within:border-cyan-400/50 focus-within:shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)] transition-all">
-            <Textarea
-              value={prompt}
-              onChange={e => setPrompt(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate(); }}
-              placeholder="Describe your thumbnail in any language…"
-              rows={3}
-              className="bg-transparent border-0 focus-visible:ring-0 resize-none text-sm px-5 pt-4 pb-2 min-h-[92px]"
-            />
-
-            {/* Bottom bar */}
-            <div className="flex items-center justify-between gap-2 px-3 pb-3">
-              <div className="flex items-center gap-1">
-                {/* + menu with all options */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-white/10">
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="w-72 p-2 bg-background/95 backdrop-blur-xl border-white/10">
-                    <div className="grid grid-cols-2 gap-1">
-                      <button onClick={() => refInputRef.current?.click()} className="flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-white/5 text-left">
-                        <Upload className="h-4 w-4 text-cyan-300" /> Upload Image
-                      </button>
-                      <button onClick={() => faceInputRef.current?.click()} className="flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-white/5 text-left">
-                        <User className="h-4 w-4 text-fuchsia-300" /> Face Image
-                      </button>
-                    </div>
-                    <div className="my-2 h-px bg-white/10" />
-                    <div className="space-y-2">
-                      <div>
-                        <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><LinkIcon className="h-3 w-3" /> YouTube URL</Label>
-                        <div className="flex gap-1">
-                          <Input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="youtube.com/watch?v=…" className="bg-black/40 border-white/10 text-xs h-8" />
-                          <Button size="sm" variant="secondary" onClick={importYouTube} className="h-8 px-2 text-xs">Import</Button>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Type className="h-3 w-3" /> Title (optional)</Label>
-                        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bold headline on thumbnail" maxLength={40} className="bg-black/40 border-white/10 text-xs h-8" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Palette className="h-3 w-3" /> Style</Label>
-                          <Select value={style} onValueChange={setStyle}>
-                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
-                            <SelectContent>{styleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Languages className="h-3 w-3" /> Language</Label>
-                          <Select value={language} onValueChange={setLanguage}>
-                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
-                            <SelectContent>{languageOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Ratio className="h-3 w-3" /> Ratio</Label>
-                          <Select value={size} onValueChange={setSize}>
-                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
-                            <SelectContent>{sizeOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Layers className="h-3 w-3" /> Variations</Label>
-                          <Select value={String(variations)} onValueChange={v => setVariations(Number(v))}>
-                            <SelectTrigger className="bg-black/40 border-white/10 text-xs h-8"><SelectValue /></SelectTrigger>
-                            <SelectContent>{[1, 2, 3, 4].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1 flex items-center gap-1"><Ban className="h-3 w-3" /> Negative Prompt</Label>
-                        <Textarea value={negative} onChange={e => setNegative(e.target.value)} placeholder="blurry, low quality, extra fingers…" rows={2} className="bg-black/40 border-white/10 text-xs resize-none" />
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                {/* Quick chips */}
-                <div className="hidden sm:flex items-center gap-1 ml-1 text-[11px]">
-                  <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{size}</span>
-                  <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{style}</span>
-                  {variations > 1 && <span className="rounded-full px-2 py-1 bg-cyan-400/15 text-cyan-300">×{variations}</span>}
-                  {(refImages.length + (faceImage ? 1 : 0)) > 0 && (
-                    <span className="rounded-full px-2 py-1 bg-fuchsia-400/15 text-fuchsia-300">📎 {refImages.length + (faceImage ? 1 : 0)}</span>
-                  )}
-                </div>
+      {/* Chat thread */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto py-6 space-y-6 scroll-smooth">
+        {messages.length === 0 && !generating ? (
+          <div className="h-full flex flex-col items-center justify-center text-center px-4">
+            <div className="relative mb-6">
+              <motion.div className="h-28 w-28 rounded-full bg-gradient-to-br from-cyan-400/30 to-fuchsia-500/30 blur-xl absolute inset-0"
+                animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 3, repeat: Infinity }} />
+              <div className="relative h-28 w-28 rounded-full bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 border border-white/10 flex items-center justify-center">
+                <ImageIcon className="h-12 w-12 text-cyan-300/70" />
               </div>
-
-              {/* Send */}
-              <Button
-                onClick={handleGenerate}
-                disabled={generating || !prompt.trim()}
-                size="icon"
-                className="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 hover:opacity-90 text-slate-950 shadow-[0_0_25px_-4px_rgba(34,211,238,0.7)] disabled:opacity-40"
-              >
-                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
-              </Button>
+            </div>
+            <h3 className="font-display text-xl font-semibold mb-2">Start a thumbnail conversation</h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-5">
+              Type your idea below and tap send. Add reference images, faces, or a YouTube URL from the <b className="text-cyan-300">+</b> menu.
+            </p>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden ring-1 ring-white/10">
+              <video src={demoVideo.url} autoPlay loop muted playsInline className="w-full h-auto" />
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2 justify-center max-w-xl">
+              {["MrBeast style $10,000 challenge", "Cinematic AI tech ad thumbnail", "Shocking finance headline", "Gaming stream face-cam"].map(s => (
+                <button key={s} onClick={() => setPrompt(s)} className="text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-muted-foreground hover:text-white transition">
+                  {s}
+                </button>
+              ))}
             </div>
           </div>
-
-          <p className="text-[10px] text-center text-muted-foreground px-2">
-            Tap <Plus className="inline h-3 w-3" /> for uploads, style, language, ratio & more · ⌘/Ctrl + Enter to generate
-          </p>
-        </motion.aside>
-
-
-        {/* RIGHT: Preview */}
-        <motion.section
-          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-          className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 sm:p-6 shadow-[0_0_40px_-15px_rgba(217,70,239,0.35)] min-h-[500px] flex flex-col"
-        >
-          {!active ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-              <div className="relative mb-6">
-                <motion.div
-                  className="h-32 w-32 rounded-full bg-gradient-to-br from-cyan-400/30 to-fuchsia-500/30 blur-xl absolute inset-0"
-                  animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 3, repeat: Infinity }}
-                />
-                <div className="relative h-32 w-32 rounded-full bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 border border-white/10 flex items-center justify-center">
-                  <ImageIcon className="h-14 w-14 text-cyan-300/70" />
-                </div>
-              </div>
-              <h3 className="font-display text-xl font-semibold mb-2">Your AI Thumbnail will appear here</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                Fill in your prompt on the left, add reference images, and hit <b className="text-cyan-300">Generate Thumbnail</b>.
-              </p>
-              <div className="w-full max-w-lg rounded-2xl overflow-hidden ring-1 ring-white/10">
-                <video src={demoVideo.url} autoPlay loop muted playsInline className="w-full h-auto" />
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-2">Live preview of what Ultra Media AI can generate</p>
-            </div>
-          ) : (
-            <motion.div key={active.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              {active.loading ? (
-                <div className="rounded-2xl bg-black/40 flex items-center justify-center" style={{ aspectRatio: active.size.replace(":", "/"), minHeight: 300 }}>
-                  <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
-                </div>
-              ) : active.error ? (
-                <div className="rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 p-8 text-center">{active.error}</div>
-              ) : (
-                <div className="relative group rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl">
-                  <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-cyan-400/40 to-fuchsia-500/40 blur-md -z-10" />
-                  <img
-                    src={active.imageUrl}
-                    alt="AI generated thumbnail"
-                    className="w-full object-cover cursor-zoom-in"
-                    style={{ aspectRatio: active.size.replace(":", "/") }}
-                    onClick={() => setLightbox({ url: active.imageUrl!, size: active.size })}
-                  />
-                  {active.fallback && <span className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-bold">FALLBACK</span>}
-                  <span className="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded bg-black/60 backdrop-blur text-white/80">Ultra Media AI · {active.size}</span>
-                </div>
-              )}
-
-              {active.imageUrl && (
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => downloadImg(active.imageUrl!, active.size)} className="flex-1 min-w-[140px] bg-cyan-500 hover:bg-cyan-400 text-slate-950">
-                    <Download className="h-4 w-4 mr-1.5" /> Download HD
-                  </Button>
-                  <Button variant="outline" onClick={handleGenerate} className="border-white/10">
-                    <RefreshCw className="h-4 w-4 mr-1.5" /> Regenerate
-                  </Button>
-                  <Button variant="outline" onClick={() => reusePrompt(active)} className="border-white/10">
-                    <Wand2 className="h-4 w-4 mr-1.5" /> Edit
-                  </Button>
-                  <Button variant="outline" onClick={() => setLightbox({ url: active.imageUrl!, size: active.size })} className="border-white/10">
-                    <Maximize2 className="h-4 w-4 mr-1.5" /> Upscale View
-                  </Button>
-                  <Button variant="outline" onClick={() => shareImg(active.imageUrl!)} className="border-white/10">
-                    <Share2 className="h-4 w-4 mr-1.5" /> Share
-                  </Button>
-                  <Button variant="outline" onClick={() => copyImg(active.imageUrl!)} className="border-white/10">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* History strip */}
-          {items.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-white/10">
-              <p className="text-xs uppercase tracking-wider text-cyan-300/70 mb-2">Recent Generations</p>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {items.slice().reverse().map(it => (
-                  <div key={it.id} className="relative shrink-0 group">
-                    <button
-                      onClick={() => setActiveId(it.id)}
-                      className={`h-16 w-28 rounded-lg overflow-hidden border-2 transition ${active?.id === it.id ? "border-cyan-400 shadow-[0_0_15px_-2px_rgba(34,211,238,0.6)]" : "border-white/10 hover:border-cyan-400/50"}`}
-                    >
-                      {it.imageUrl ? <img src={it.imageUrl} alt="" className="w-full h-full object-cover" /> :
-                        <div className="w-full h-full bg-black/40 flex items-center justify-center">
-                          {it.loading ? <Loader2 className="h-3 w-3 animate-spin text-cyan-400" /> : <X className="h-3 w-3 text-red-400" />}
-                        </div>}
-                    </button>
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-black/60 rounded-lg flex items-center justify-center gap-1">
-                      {it.imageUrl && <button onClick={() => downloadImg(it.imageUrl!, it.size)} className="p-1 rounded bg-white/10 hover:bg-white/20"><Download className="h-3 w-3 text-white" /></button>}
-                      <button onClick={() => reusePrompt(it)} className="p-1 rounded bg-white/10 hover:bg-white/20"><RefreshCw className="h-3 w-3 text-white" /></button>
-                      <button onClick={() => deleteItem(it.id)} className="p-1 rounded bg-red-500/70 hover:bg-red-500"><Trash2 className="h-3 w-3 text-white" /></button>
+        ) : (
+          <div className="max-w-3xl mx-auto w-full px-2 sm:px-4 space-y-6">
+            {messages.map(m => m.role === "user" ? (
+              <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
+                <div className="max-w-[85%] rounded-3xl rounded-tr-md bg-gradient-to-br from-cyan-500/90 to-sky-500/90 text-slate-950 px-4 py-3 shadow-[0_4px_20px_-6px_rgba(34,211,238,0.5)]">
+                  {(m.refs.length > 0 || m.face) && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {m.refs.map((r, i) => <img key={i} src={r} className="h-12 w-12 rounded-lg object-cover ring-1 ring-slate-950/20" />)}
+                      {m.face && <div className="relative"><img src={m.face} className="h-12 w-12 rounded-lg object-cover ring-2 ring-slate-950/40" /><span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] bg-slate-950 text-cyan-300 px-1 rounded font-bold">FACE</span></div>}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </motion.section>
+                  )}
+                  <p className="text-sm font-medium whitespace-pre-wrap break-words">{m.text}</p>
+                  {m.title && <p className="text-[11px] mt-1 opacity-80">Title: “{m.title}”</p>}
+                  <p className="text-[10px] mt-1 opacity-70">{m.style} · {m.size}</p>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start gap-3">
+                <div className="shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 flex items-center justify-center shadow-[0_0_15px_-3px_rgba(217,70,239,0.6)]">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <div className="max-w-[85%] flex-1">
+                  {m.loading ? (
+                    <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4 flex items-center gap-3">
+                      <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
+                      <AnimatePresence mode="wait">
+                        <motion.span key={loadingMsgIdx} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                          className="text-sm text-muted-foreground">{loadingMessages[loadingMsgIdx]}</motion.span>
+                      </AnimatePresence>
+                    </div>
+                  ) : m.error ? (
+                    <div className="rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 p-4 text-sm">{m.error}</div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="relative group rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-xl">
+                        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-cyan-400/30 to-fuchsia-500/30 blur-md -z-10" />
+                        <img src={m.imageUrl} alt="AI thumbnail" className="w-full object-cover cursor-zoom-in" style={{ aspectRatio: m.size.replace(":", "/") }}
+                          onClick={() => setLightbox({ url: m.imageUrl!, size: m.size })} />
+                        {m.fallback && <span className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-bold">FALLBACK</span>}
+                        <span className="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded bg-black/60 backdrop-blur text-white/80">Ultra Media AI · {m.size}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Button size="sm" onClick={() => downloadImg(m.imageUrl!, m.size)} className="h-8 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs">
+                          <Download className="h-3.5 w-3.5 mr-1" /> Download HD
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => regenerate(m.sourceUserId)} className="h-8 border-white/10 text-xs">
+                          <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setLightbox({ url: m.imageUrl!, size: m.size })} className="h-8 border-white/10 text-xs">
+                          <Maximize2 className="h-3.5 w-3.5 mr-1" /> View
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => shareImg(m.imageUrl!)} className="h-8 border-white/10 text-xs">
+                          <Share2 className="h-3.5 w-3.5 mr-1" /> Share
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => copyImg(m.imageUrl!)} className="h-8 w-8 p-0 border-white/10">
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* LOADING OVERLAY */}
-      <AnimatePresence>
-        {generating && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="relative rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-2xl p-10 max-w-md w-[90%] text-center shadow-[0_0_80px_-20px_rgba(34,211,238,0.6)]"
-            >
-              {/* Orb */}
-              <div className="relative h-32 w-32 mx-auto mb-6">
-                <motion.div
-                  className="absolute inset-0 rounded-full border-4 border-transparent"
-                  style={{ borderTopColor: "rgb(34 211 238)", borderRightColor: "rgb(217 70 239)" }}
-                  animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.div
-                  className="absolute inset-3 rounded-full border-4 border-transparent"
-                  style={{ borderBottomColor: "rgb(56 189 248)", borderLeftColor: "rgb(232 121 249)" }}
-                  animate={{ rotate: -360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.div
-                  className="absolute inset-6 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 blur-md"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <div className="absolute inset-6 rounded-full bg-gradient-to-br from-cyan-400/80 to-fuchsia-500/80 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-white" />
-                </div>
-                {/* orbiting particles */}
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <motion.span
-                    key={i}
-                    className="absolute h-1.5 w-1.5 rounded-full bg-cyan-300 top-1/2 left-1/2"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3 + i * 0.3, repeat: Infinity, ease: "linear" }}
-                    style={{ transformOrigin: `${40 + i * 8}px 0px` }}
-                  />
-                ))}
-              </div>
+      {/* Composer */}
+      <div className="pt-3 border-t border-white/5 max-w-3xl mx-auto w-full">
+        <input ref={refInputRef} type="file" accept="image/*" multiple hidden onChange={e => { handleRefFiles(e.target.files); e.target.value = ""; }} />
+        <input ref={faceInputRef} type="file" accept="image/*" hidden onChange={e => { handleFaceFile(e.target.files); e.target.value = ""; }} />
 
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={loadingMsgIdx}
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                  className="text-lg font-medium mb-4"
-                >
-                  {loadingMessages[loadingMsgIdx]}
-                </motion.p>
-              </AnimatePresence>
-
-              <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden mb-2">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-fuchsia-500"
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.4 }}
-                />
+        {(refImages.length > 0 || faceImage) && (
+          <div className="flex flex-wrap gap-2 px-2 pb-2">
+            {refImages.map(r => (
+              <div key={r.id} className="relative group">
+                <img src={r.url} alt={r.name} className="h-12 w-12 rounded-lg object-cover ring-1 ring-white/10" />
+                <button onClick={() => setRefImages(p => p.filter(x => x.id !== r.id))} className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white p-0.5">
+                  <X className="h-2.5 w-2.5" />
+                </button>
               </div>
-              <p className="text-xs text-cyan-300/80 font-mono">{Math.floor(progress)}%</p>
-            </motion.div>
-          </motion.div>
+            ))}
+            {faceImage && (
+              <div className="relative">
+                <img src={faceImage.url} alt="face" className="h-12 w-12 rounded-lg object-cover ring-2 ring-cyan-400/70" />
+                <button onClick={() => setFaceImage(null)} className="absolute -top-1 -right-1 rounded-full bg-red-500 text-white p-0.5">
+                  <X className="h-2.5 w-2.5" />
+                </button>
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] bg-cyan-400 text-slate-950 px-1 rounded font-bold">FACE</span>
+              </div>
+            )}
+          </div>
         )}
-      </AnimatePresence>
+
+        <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_40px_-15px_rgba(34,211,238,0.4)] focus-within:border-cyan-400/50 focus-within:shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)] transition-all">
+          <Textarea
+            ref={textareaRef}
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+            placeholder="Message Ultra Media AI… (any language)"
+            rows={2}
+            className="bg-transparent border-0 focus-visible:ring-0 resize-none text-sm px-5 pt-3.5 pb-1 min-h-[64px] max-h-40"
+          />
+
+          <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
+            <div className="flex items-center gap-1">
+              {/* + upload menu */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-white/10" title="Add">
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-3xl bg-background/95 backdrop-blur-xl border-white/10 max-h-[70vh] overflow-y-auto">
+                  <SheetHeader><SheetTitle className="text-left">Add to your prompt</SheetTitle></SheetHeader>
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <button onClick={() => refInputRef.current?.click()} className="flex items-center gap-3 rounded-xl p-3 bg-white/5 hover:bg-white/10 text-left">
+                      <Upload className="h-5 w-5 text-cyan-300" /><div><p className="text-sm font-medium">Upload Image</p><p className="text-[11px] text-muted-foreground">Reference photos</p></div>
+                    </button>
+                    <button onClick={() => faceInputRef.current?.click()} className="flex items-center gap-3 rounded-xl p-3 bg-white/5 hover:bg-white/10 text-left">
+                      <User className="h-5 w-5 text-fuchsia-300" /><div><p className="text-sm font-medium">Face Image</p><p className="text-[11px] text-muted-foreground">Keep identity</p></div>
+                    </button>
+                  </div>
+                  <div className="mt-4">
+                    <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1.5 flex items-center gap-1"><LinkIcon className="h-3 w-3" /> Import from YouTube</Label>
+                    <div className="flex gap-2">
+                      <Input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" className="bg-black/40 border-white/10 text-sm h-10" />
+                      <Button onClick={importYouTube} className="h-10">Import</Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Settings drawer */}
+              <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <SheetTrigger asChild>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-white/10" title="Settings">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-white/10 w-full sm:max-w-md overflow-y-auto">
+                  <SheetHeader><SheetTitle>Generation Settings</SheetTitle></SheetHeader>
+                  <div className="mt-6 space-y-5">
+                    <div>
+                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Type className="h-3.5 w-3.5 text-cyan-300" /> On-thumbnail Title</Label>
+                      <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bold headline (optional)" maxLength={40} className="bg-black/40 border-white/10" />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Palette className="h-3.5 w-3.5 text-cyan-300" /> Style</Label>
+                      <Select value={style} onValueChange={setStyle}>
+                        <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
+                        <SelectContent>{styleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Languages className="h-3.5 w-3.5 text-cyan-300" /> Language</Label>
+                      <Select value={language} onValueChange={setLanguage}>
+                        <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
+                        <SelectContent>{languageOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Ratio className="h-3.5 w-3.5 text-cyan-300" /> Aspect</Label>
+                        <Select value={size} onValueChange={setSize}>
+                          <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
+                          <SelectContent>{sizeOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-cyan-300" /> Variations</Label>
+                        <Select value={String(variations)} onValueChange={v => setVariations(Number(v))}>
+                          <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
+                          <SelectContent>{[1, 2, 3, 4].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Ban className="h-3.5 w-3.5 text-cyan-300" /> Negative Prompt</Label>
+                      <Textarea value={negative} onChange={e => setNegative(e.target.value)} placeholder="blurry, low quality, extra fingers…" rows={3} className="bg-black/40 border-white/10 resize-none" />
+                    </div>
+                    <Button onClick={() => setSettingsOpen(false)} className="w-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white">Done</Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Chips */}
+              <div className="hidden sm:flex items-center gap-1 ml-1 text-[11px]">
+                <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{size}</span>
+                <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{style}</span>
+                {variations > 1 && <span className="rounded-full px-2 py-1 bg-cyan-400/15 text-cyan-300">×{variations}</span>}
+                {(refImages.length + (faceImage ? 1 : 0)) > 0 && (
+                  <span className="rounded-full px-2 py-1 bg-fuchsia-400/15 text-fuchsia-300">📎 {refImages.length + (faceImage ? 1 : 0)}</span>
+                )}
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSend}
+              disabled={generating || !prompt.trim()}
+              size="icon"
+              className="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 hover:opacity-90 text-slate-950 shadow-[0_0_25px_-4px_rgba(34,211,238,0.7)] disabled:opacity-40"
+            >
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-center text-muted-foreground mt-2 mb-1">
+          Tap <Plus className="inline h-3 w-3" /> to attach · <SlidersHorizontal className="inline h-3 w-3" /> for style, language & ratio · Enter to send
+        </p>
+      </div>
 
       {/* Lightbox */}
       <Dialog open={!!lightbox} onOpenChange={o => !o && setLightbox(null)}>
