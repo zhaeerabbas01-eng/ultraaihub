@@ -153,6 +153,19 @@ export default function ThumbnailGeneratorPage() {
               size, referenceImages: refs, titleText: title.trim() || undefined,
             },
           });
+          // API key validation errors from the function
+          if (data?.code === "missing_api_key") {
+            toast.error("API key missing", { description: "Add GEMINI_API_KEY in Settings → Secrets." });
+            throw new Error("API key missing");
+          }
+          if (data?.code === "malformed_api_key") {
+            toast.error("API key malformed", { description: "Google keys must start with 'AIza' or 'AQ.'." });
+            throw new Error("API key malformed");
+          }
+          if (data?.code === "unauthorized_api_key") {
+            toast.error("API key unauthorized", { description: data.error || "The Gemini key was rejected. Please update it." });
+            throw new Error("API key unauthorized");
+          }
           if (error) throw error;
           if (!data?.imageUrl) throw new Error("No image returned");
           setMessages(p => p.map(m => m.id === aid ? { ...m, loading: false, imageUrl: data.imageUrl, fallback: !!data.fallback } as Msg : m));
@@ -160,6 +173,7 @@ export default function ThumbnailGeneratorPage() {
         } catch (e: any) {
           setMessages(p => p.map(m => m.id === aid ? { ...m, loading: false, error: e.message || "Failed" } as Msg : m));
         }
+
       }
     } finally {
       setGenerating(false);
