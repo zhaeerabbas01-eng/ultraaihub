@@ -276,18 +276,42 @@ serve(async (req) => {
       userContent.push({ type: "image_url", image_url: { url: ref } });
     }
 
+    // Prefer user's own Gemini API key (unlimited by Lovable credits). Fall back to Lovable AI Gateway.
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      const imageUrl = createFallbackThumbnail(prompt, size);
-      return new Response(JSON.stringify({ imageUrl, fallback: true, message: "AI gateway is not configured, so a fallback thumbnail was generated instead." }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+    if (!GEMINI_API_KEY && !LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({
+        error: "No AI API key configured. Please add GEMINI_API_KEY in Settings → Secrets.",
+        code: "missing_api_key",
+      }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const result = await generateWithLovableAI(userContent, LOVABLE_API_KEY);
+    // Validate Gemini key shape early (Google keys start with AIza or AQ.)
+    if (GEMINI_API_KEY && !/^(AIza|AQ\.)/.test(GEMINI_API_KEY)) {
+      return new Response(JSON.stringify({
+        error: "GEMINI_API_KEY looks malformed. Google keys start with 'AIza' or 'AQ.'.",
+        code: "malformed_api_key",
+      }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    let result: { imageUrl?: string; fallbackMessage?: string; status?: number } = {};
+    if (GEMINI_API_KEY) {
+      result = await generateWithGemini(finalPrompt, refs, GEMINI_API_KEY);
+      // Surface auth errors clearly instead of falling back silently
+      if (result.status === 401 || result.status === 403) {
+        return new Response(JSON.stringify({ error: result.fallbackMessage, code: "unauthorized_api_key" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+    if (!result.imageUrl && LOVABLE_API_KEY) {
+      result = await generateWithLovableAI(userContent, LOVABLE_API_KEY);
+    }
+
     if (!result.imageUrl) {
       const imageUrl = createFallbackThumbnail(prompt, size);
-      return new Response(JSON.stringify({ imageUrl, fallback: true, message: result.fallbackMessage }), {
+      return new Response(JSON.stringify({ imageUrl, fallback: true, message: result.fallbackMessage || "AI unavailable — fallback shown." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -295,6 +319,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ imageUrl: result.imageUrl, fallback: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
 
   } catch (e) {
     console.error("ai-thumbnail-generate error:", e);
