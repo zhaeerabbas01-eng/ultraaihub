@@ -353,99 +353,105 @@ export default function ThumbnailGeneratorPage() {
             className="bg-transparent border-0 focus-visible:ring-0 resize-none text-sm px-5 pt-3.5 pb-1 min-h-[64px] max-h-40"
           />
 
+          {/* Visible quick toolbar — all controls in one line */}
+          <div className="flex flex-wrap items-center gap-1.5 px-2.5 pt-1 pb-1.5 border-t border-white/5">
+            <button onClick={() => refInputRef.current?.click()} title="Upload reference image"
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] bg-white/5 hover:bg-cyan-400/15 border border-white/10 hover:border-cyan-400/40 text-muted-foreground hover:text-cyan-200 transition">
+              <Upload className="h-3 w-3" /> Image
+            </button>
+            <button onClick={() => faceInputRef.current?.click()} title="Add face reference"
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] bg-white/5 hover:bg-fuchsia-400/15 border border-white/10 hover:border-fuchsia-400/40 text-muted-foreground hover:text-fuchsia-200 transition">
+              <User className="h-3 w-3" /> Face
+            </button>
+
+            {/* YouTube popover trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <button title="Import YouTube thumbnail"
+                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] bg-white/5 hover:bg-red-400/15 border border-white/10 hover:border-red-400/40 text-muted-foreground hover:text-red-200 transition">
+                  <LinkIcon className="h-3 w-3" /> YouTube
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-3xl bg-background/95 backdrop-blur-xl border-white/10">
+                <SheetHeader><SheetTitle className="text-left">Import from YouTube</SheetTitle></SheetHeader>
+                <div className="flex gap-2 mt-4">
+                  <Input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" className="bg-black/40 border-white/10 text-sm h-10" />
+                  <Button onClick={importYouTube} className="h-10">Import</Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-2">The video's thumbnail will be added as a reference image.</p>
+              </SheetContent>
+            </Sheet>
+
+            <div className="h-4 w-px bg-white/10 mx-0.5" />
+
+            {/* Style */}
+            <Select value={style} onValueChange={setStyle}>
+              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-white/5 border border-white/10 px-2.5 text-[11px] hover:bg-white/10 [&>svg]:h-3 [&>svg]:w-3">
+                <Palette className="h-3 w-3 text-cyan-300 mr-0.5" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>{styleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+
+            {/* Language */}
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-white/5 border border-white/10 px-2.5 text-[11px] hover:bg-white/10 [&>svg]:h-3 [&>svg]:w-3">
+                <Languages className="h-3 w-3 text-cyan-300 mr-0.5" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>{languageOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+            </Select>
+
+            {/* Aspect */}
+            <Select value={size} onValueChange={setSize}>
+              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-white/5 border border-white/10 px-2.5 text-[11px] hover:bg-white/10 [&>svg]:h-3 [&>svg]:w-3">
+                <Ratio className="h-3 w-3 text-cyan-300 mr-0.5" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>{sizeOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+            </Select>
+
+            {/* Variations */}
+            <Select value={String(variations)} onValueChange={v => setVariations(Number(v))}>
+              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-white/5 border border-white/10 px-2.5 text-[11px] hover:bg-white/10 [&>svg]:h-3 [&>svg]:w-3">
+                <Layers className="h-3 w-3 text-cyan-300 mr-0.5" />×<SelectValue />
+              </SelectTrigger>
+              <SelectContent>{[1, 2, 3, 4].map(n => <SelectItem key={n} value={String(n)}>{n} variation{n > 1 ? "s" : ""}</SelectItem>)}</SelectContent>
+            </Select>
+
+            <div className="h-4 w-px bg-white/10 mx-0.5" />
+
+            {/* Title + Negative (advanced) */}
+            <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+              <SheetTrigger asChild>
+                <button title="Headline & advanced"
+                  className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] border transition ${title || negative ? "bg-cyan-400/15 border-cyan-400/40 text-cyan-200" : "bg-white/5 border-white/10 text-muted-foreground hover:text-white hover:bg-white/10"}`}>
+                  <Type className="h-3 w-3" /> {title ? `“${title.slice(0, 14)}${title.length > 14 ? "…" : ""}”` : "Headline"}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-white/10 w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader><SheetTitle>Headline & Advanced</SheetTitle></SheetHeader>
+                <div className="mt-6 space-y-5">
+                  <div>
+                    <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Type className="h-3.5 w-3.5 text-cyan-300" /> On-thumbnail Title</Label>
+                    <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bold headline shown ON the thumbnail (optional)" maxLength={40} className="bg-black/40 border-white/10" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Exact text preserved — any language. Max 40 chars.</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Ban className="h-3.5 w-3.5 text-cyan-300" /> Negative Prompt</Label>
+                    <Textarea value={negative} onChange={e => setNegative(e.target.value)} placeholder="blurry, low quality, extra fingers, distorted…" rows={3} className="bg-black/40 border-white/10 resize-none" />
+                  </div>
+                  <Button onClick={() => setSettingsOpen(false)} className="w-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white">Done</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {(refImages.length + (faceImage ? 1 : 0)) > 0 && (
+              <span className="ml-auto rounded-full px-2 py-1 text-[10px] bg-fuchsia-400/15 text-fuchsia-300 border border-fuchsia-400/30">
+                📎 {refImages.length + (faceImage ? 1 : 0)} attached
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
-            <div className="flex items-center gap-1">
-              {/* + upload menu */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-white/10" title="Add">
-                    <Plus className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-3xl bg-background/95 backdrop-blur-xl border-white/10 max-h-[70vh] overflow-y-auto">
-                  <SheetHeader><SheetTitle className="text-left">Add to your prompt</SheetTitle></SheetHeader>
-                  <div className="grid grid-cols-2 gap-2 mt-4">
-                    <button onClick={() => refInputRef.current?.click()} className="flex items-center gap-3 rounded-xl p-3 bg-white/5 hover:bg-white/10 text-left">
-                      <Upload className="h-5 w-5 text-cyan-300" /><div><p className="text-sm font-medium">Upload Image</p><p className="text-[11px] text-muted-foreground">Reference photos</p></div>
-                    </button>
-                    <button onClick={() => faceInputRef.current?.click()} className="flex items-center gap-3 rounded-xl p-3 bg-white/5 hover:bg-white/10 text-left">
-                      <User className="h-5 w-5 text-fuchsia-300" /><div><p className="text-sm font-medium">Face Image</p><p className="text-[11px] text-muted-foreground">Keep identity</p></div>
-                    </button>
-                  </div>
-                  <div className="mt-4">
-                    <Label className="text-[10px] uppercase tracking-wider text-cyan-300/80 mb-1.5 flex items-center gap-1"><LinkIcon className="h-3 w-3" /> Import from YouTube</Label>
-                    <div className="flex gap-2">
-                      <Input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" className="bg-black/40 border-white/10 text-sm h-10" />
-                      <Button onClick={importYouTube} className="h-10">Import</Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-
-              {/* Settings drawer */}
-              <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <SheetTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-white/10" title="Settings">
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-white/10 w-full sm:max-w-md overflow-y-auto">
-                  <SheetHeader><SheetTitle>Generation Settings</SheetTitle></SheetHeader>
-                  <div className="mt-6 space-y-5">
-                    <div>
-                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Type className="h-3.5 w-3.5 text-cyan-300" /> On-thumbnail Title</Label>
-                      <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bold headline (optional)" maxLength={40} className="bg-black/40 border-white/10" />
-                    </div>
-                    <div>
-                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Palette className="h-3.5 w-3.5 text-cyan-300" /> Style</Label>
-                      <Select value={style} onValueChange={setStyle}>
-                        <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
-                        <SelectContent>{styleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Languages className="h-3.5 w-3.5 text-cyan-300" /> Language</Label>
-                      <Select value={language} onValueChange={setLanguage}>
-                        <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
-                        <SelectContent>{languageOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Ratio className="h-3.5 w-3.5 text-cyan-300" /> Aspect</Label>
-                        <Select value={size} onValueChange={setSize}>
-                          <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
-                          <SelectContent>{sizeOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-cyan-300" /> Variations</Label>
-                        <Select value={String(variations)} onValueChange={v => setVariations(Number(v))}>
-                          <SelectTrigger className="bg-black/40 border-white/10"><SelectValue /></SelectTrigger>
-                          <SelectContent>{[1, 2, 3, 4].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs mb-1.5 flex items-center gap-1.5"><Ban className="h-3.5 w-3.5 text-cyan-300" /> Negative Prompt</Label>
-                      <Textarea value={negative} onChange={e => setNegative(e.target.value)} placeholder="blurry, low quality, extra fingers…" rows={3} className="bg-black/40 border-white/10 resize-none" />
-                    </div>
-                    <Button onClick={() => setSettingsOpen(false)} className="w-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white">Done</Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-
-              {/* Chips */}
-              <div className="hidden sm:flex items-center gap-1 ml-1 text-[11px]">
-                <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{size}</span>
-                <span className="rounded-full px-2 py-1 bg-white/5 text-muted-foreground">{style}</span>
-                {variations > 1 && <span className="rounded-full px-2 py-1 bg-cyan-400/15 text-cyan-300">×{variations}</span>}
-                {(refImages.length + (faceImage ? 1 : 0)) > 0 && (
-                  <span className="rounded-full px-2 py-1 bg-fuchsia-400/15 text-fuchsia-300">📎 {refImages.length + (faceImage ? 1 : 0)}</span>
-                )}
-              </div>
-            </div>
-
+            <p className="text-[10px] text-muted-foreground pl-2">Enter to send · Shift+Enter for newline</p>
             <Button
               onClick={handleSend}
               disabled={generating || !prompt.trim()}
@@ -458,9 +464,12 @@ export default function ThumbnailGeneratorPage() {
         </div>
 
         <p className="text-[10px] text-center text-muted-foreground mt-2 mb-1">
-          Tap <Plus className="inline h-3 w-3" /> to attach · <SlidersHorizontal className="inline h-3 w-3" /> for style, language & ratio · Enter to send
+          All controls above · Any language · Enter to generate
         </p>
       </div>
+
+
+
 
       {/* Lightbox */}
       <Dialog open={!!lightbox} onOpenChange={o => !o && setLightbox(null)}>
