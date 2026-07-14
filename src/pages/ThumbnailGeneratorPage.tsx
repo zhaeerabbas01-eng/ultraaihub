@@ -461,6 +461,14 @@ export default function ThumbnailGeneratorPage() {
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
             </Button>
           </div>
+        </div>
+
+        <p className="text-[10px] text-center text-muted-foreground mt-2 mb-1">
+          All controls above · Any language · Enter to generate
+        </p>
+      </div>
+
+
 
 
       {/* Lightbox */}
