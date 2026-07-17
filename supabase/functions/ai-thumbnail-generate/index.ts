@@ -161,13 +161,16 @@ async function generateWithGemini(
   });
 
   const models = ["gemini-2.5-flash-image", "gemini-2.0-flash-exp-image-generation"];
+  // AQ.* keys are OAuth access tokens → Authorization: Bearer. AIza* keys → ?key= query.
+  const isBearer = apiKey.startsWith("AQ.");
   for (const model of models) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
+    const url = isBearer
+      ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (isBearer) headers["Authorization"] = `Bearer ${apiKey}`;
+    const res = await fetch(url, { method: "POST", headers, body });
+
     if (res.ok) {
       const data = await res.json();
       const partsOut = data?.candidates?.[0]?.content?.parts || [];
