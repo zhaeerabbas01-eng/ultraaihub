@@ -1,3 +1,5 @@
+declare const Deno: { env: { get(key: string): string | undefined } };
+
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 
