@@ -301,13 +301,9 @@ serve(async (req) => {
     let result: { imageUrl?: string; fallbackMessage?: string; status?: number } = {};
     if (GEMINI_API_KEY) {
       result = await generateWithGemini(finalPrompt, refs, GEMINI_API_KEY);
-      // Surface auth errors clearly instead of falling back silently
-      if (result.status === 401 || result.status === 403) {
-        return new Response(JSON.stringify({ error: result.fallbackMessage, code: "unauthorized_api_key" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      // On any Gemini failure (auth, quota, etc.) silently fall through to Lovable AI Gateway.
     }
+
     if (!result.imageUrl && LOVABLE_API_KEY) {
       result = await generateWithLovableAI(userContent, LOVABLE_API_KEY);
     }
