@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "ultra-media-ai-hub",
+      "version": "0.1.0",
+      "title": "Ultra Media AI Hub"
+    },
+    "tools": [
+      {
+        "name": "generate_thumbnail",
+        "title": "Generate AI Thumbnail",
+        "description": "Generate a high-CTR YouTube/social thumbnail image from a text prompt in any language. Returns a data URL of the generated image.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "Topic or description of the thumbnail (any language)."
+            },
+            "size": {
+              "description": "Aspect ratio. Defaults to 16:9.",
+              "type": "string",
+              "enum": [
+                "16:9",
+                "1:1",
+                "9:16",
+                "4:3",
+                "21:9"
+              ]
+            },
+            "titleText": {
+              "description": "Optional exact headline text to render on the thumbnail.",
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          "required": [
+            "prompt"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "extract_youtube_tags",
+        "title": "Extract YouTube Tags",
+        "description": "Extract SEO tags and keywords from a YouTube video URL.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Full YouTube video URL."
+            }
+          },
+          "required": [
+            "url"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "check_youtube_monetization",
+        "title": "Check YouTube Monetization",
+        "description": "Check whether a YouTube channel meets monetization criteria (subs, watch hours, eligibility).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "channelUrl": {
+              "type": "string",
+              "minLength": 3,
+              "description": "YouTube channel URL, @handle, or channel ID."
+            }
+          },
+          "required": [
+            "channelUrl"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_youtube_video_info",
+        "title": "Get YouTube Video Info",
+        "description": "Fetch public metadata (title, channel, thumbnails, description) for a YouTube video URL.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Full YouTube video URL."
+            }
+          },
+          "required": [
+            "url"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
