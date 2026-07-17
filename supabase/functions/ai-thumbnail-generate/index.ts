@@ -161,13 +161,16 @@ async function generateWithGemini(
   });
 
   const models = ["gemini-2.5-flash-image", "gemini-2.0-flash-exp-image-generation"];
+  // AQ.* keys are OAuth access tokens → Authorization: Bearer. AIza* keys → ?key= query.
+  const isBearer = apiKey.startsWith("AQ.");
   for (const model of models) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
+    const url = isBearer
+      ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (isBearer) headers["Authorization"] = `Bearer ${apiKey}`;
+    const res = await fetch(url, { method: "POST", headers, body });
+
     if (res.ok) {
       const data = await res.json();
       const partsOut = data?.candidates?.[0]?.content?.parts || [];
@@ -298,13 +301,9 @@ serve(async (req) => {
     let result: { imageUrl?: string; fallbackMessage?: string; status?: number } = {};
     if (GEMINI_API_KEY) {
       result = await generateWithGemini(finalPrompt, refs, GEMINI_API_KEY);
-      // Surface auth errors clearly instead of falling back silently
-      if (result.status === 401 || result.status === 403) {
-        return new Response(JSON.stringify({ error: result.fallbackMessage, code: "unauthorized_api_key" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      // On any Gemini failure (auth, quota, etc.) silently fall through to Lovable AI Gateway.
     }
+
     if (!result.imageUrl && LOVABLE_API_KEY) {
       result = await generateWithLovableAI(userContent, LOVABLE_API_KEY);
     }
