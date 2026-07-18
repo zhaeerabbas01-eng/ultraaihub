@@ -330,7 +330,7 @@ export default function ThumbnailGeneratorPage() {
       </div>
 
       {/* Composer */}
-      <div className="pt-3 border-t border-white/5 max-w-3xl mx-auto w-full">
+      <div className="pt-2 sm:pt-3 border-t border-white/5 max-w-3xl mx-auto w-full shrink-0 pb-[env(safe-area-inset-bottom)]">
         <input ref={refInputRef} type="file" accept="image/*" multiple hidden onChange={e => { handleRefFiles(e.target.files); e.target.value = ""; }} />
         <input ref={faceInputRef} type="file" accept="image/*" hidden onChange={e => { handleFaceFile(e.target.files); e.target.value = ""; }} />
 
