@@ -209,35 +209,35 @@ export default function ThumbnailGeneratorPage() {
   const clearChat = () => { setMessages([]); toast.success("Chat cleared"); };
 
   return (
-    <div className="relative flex flex-col h-[calc(100vh-6rem)]">
+    <div className="relative flex flex-col h-[100dvh] sm:h-[calc(100vh-6rem)] max-h-[100dvh] overflow-hidden px-2 sm:px-0">
       <SEO title="AI Thumbnail Generator — Ultra Media AI" description="Chat with AI to generate high-CTR YouTube thumbnails in any language or style." path="/thumbnail-generator" />
 
       {/* Aurora */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 left-1/4 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 right-0 h-[500px] w-[500px] rounded-full bg-fuchsia-500/10 blur-[120px] animate-pulse" style={{ animationDelay: "1.5s" }} />
+        <div className="absolute -top-24 left-1/4 h-[300px] w-[300px] sm:h-[500px] sm:w-[500px] rounded-full bg-cyan-500/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 right-0 h-[300px] w-[300px] sm:h-[500px] sm:w-[500px] rounded-full bg-fuchsia-500/10 blur-[120px] animate-pulse" style={{ animationDelay: "1.5s" }} />
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center shadow-[0_0_25px_-4px_rgba(34,211,238,0.6)]">
-            <Wand2 className="h-5 w-5 text-slate-950" />
+      <div className="flex items-center justify-between gap-2 pb-2 sm:pb-3 border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center shadow-[0_0_25px_-4px_rgba(34,211,238,0.6)] shrink-0">
+            <Wand2 className="h-4 w-4 sm:h-5 sm:w-5 text-slate-950" />
           </div>
-          <div>
-            <h1 className="font-display text-lg md:text-xl font-bold leading-tight">AI Thumbnail Chat</h1>
-            <p className="text-[11px] text-muted-foreground">Describe. Generate. Download. In any language.</p>
+          <div className="min-w-0">
+            <h1 className="font-display text-base sm:text-lg md:text-xl font-bold leading-tight truncate">AI Thumbnail Chat</h1>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">Describe. Generate. Download. Any language.</p>
           </div>
         </div>
         {messages.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={clearChat} className="text-xs text-muted-foreground hover:text-red-300">
-            <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
+          <Button size="sm" variant="ghost" onClick={clearChat} className="text-xs text-muted-foreground hover:text-red-300 shrink-0 h-8 px-2">
+            <Trash2 className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Clear</span>
           </Button>
         )}
       </div>
 
       {/* Chat thread */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto py-6 space-y-6 scroll-smooth">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-4 sm:py-6 space-y-4 sm:space-y-6 scroll-smooth">
         {messages.length === 0 && !generating ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-4">
             <div className="relative mb-6">
