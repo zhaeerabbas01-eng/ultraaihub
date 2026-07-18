@@ -356,7 +356,7 @@ export default function ThumbnailGeneratorPage() {
           </div>
         )}
 
-        <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_40px_-15px_rgba(34,211,238,0.4)] focus-within:border-cyan-400/50 focus-within:shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)] transition-all">
+        <div className="relative rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_40px_-15px_rgba(34,211,238,0.4)] focus-within:border-cyan-400/50 focus-within:shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)] transition-all">
           <Textarea
             ref={textareaRef}
             value={prompt}
@@ -364,7 +364,7 @@ export default function ThumbnailGeneratorPage() {
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
             placeholder="Message Ultra Media AI… (any language)"
             rows={2}
-            className="bg-transparent border-0 focus-visible:ring-0 resize-none text-sm px-5 pt-3.5 pb-1 min-h-[64px] max-h-40"
+            className="bg-transparent border-0 focus-visible:ring-0 resize-none text-sm px-4 sm:px-5 pt-3 pb-1 min-h-[56px] sm:min-h-[64px] max-h-32 sm:max-h-40"
           />
 
           {/* Visible quick toolbar — all controls in one line */}
