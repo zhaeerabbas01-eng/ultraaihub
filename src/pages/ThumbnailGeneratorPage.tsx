@@ -283,7 +283,7 @@ export default function ThumbnailGeneratorPage() {
                 <div className="shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 flex items-center justify-center shadow-[0_0_15px_-3px_rgba(217,70,239,0.6)]">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
-                <div className="max-w-[85%] flex-1">
+                <div className="max-w-[92%] sm:max-w-[85%] flex-1 min-w-0">
                   {m.loading ? (
                     <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4 flex items-center gap-3">
                       <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
