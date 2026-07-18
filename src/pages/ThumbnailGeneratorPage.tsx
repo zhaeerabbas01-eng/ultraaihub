@@ -296,9 +296,10 @@ export default function ThumbnailGeneratorPage() {
                     <div className="rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 p-4 text-sm">{m.error}</div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="relative group rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-xl">
+                      <div className="relative group rounded-xl sm:rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-xl mx-auto"
+                        style={{ maxWidth: m.size === "9:16" ? "min(100%, 320px)" : "100%" }}>
                         <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-cyan-400/30 to-fuchsia-500/30 blur-md -z-10" />
-                        <img src={m.imageUrl} alt="AI thumbnail" className="w-full object-cover cursor-zoom-in" style={{ aspectRatio: m.size.replace(":", "/") }}
+                        <img src={m.imageUrl} alt="AI thumbnail" className="w-full h-auto object-cover cursor-zoom-in block" style={{ aspectRatio: m.size.replace(":", "/") }}
                           onClick={() => setLightbox({ url: m.imageUrl!, size: m.size })} />
                         {m.fallback && <span className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-bold">FALLBACK</span>}
                         <span className="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded bg-black/60 backdrop-blur text-white/80">Ultra Media AI · {m.size}</span>
