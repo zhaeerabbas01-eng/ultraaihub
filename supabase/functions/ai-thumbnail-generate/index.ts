@@ -249,7 +249,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, referenceImage, referenceImages, size, titleText } = await req.json();
+    const { prompt, referenceImage, referenceImages, referenceThumbnails, faceImage, size, titleText } = await req.json();
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Please provide a prompt." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -261,17 +261,28 @@ serve(async (req) => {
       });
     }
 
+    const isData = (r: unknown) => typeof r === "string" && (r as string).startsWith("data:");
+
     // Normalize references — accept array or single
     const refs: string[] = Array.isArray(referenceImages)
-      ? referenceImages.filter((r: unknown) => typeof r === "string" && (r as string).startsWith("data:"))
-      : (referenceImage && typeof referenceImage === "string" && referenceImage.startsWith("data:") ? [referenceImage] : []);
+      ? referenceImages.filter(isData)
+      : (isData(referenceImage) ? [referenceImage] : []);
+
+    const thumbRefs: string[] = Array.isArray(referenceThumbnails) ? referenceThumbnails.filter(isData) : [];
+    const hasFace = isData(faceImage);
 
     const enhancedPrompt = enhancePrompt(prompt, size, typeof titleText === "string" ? titleText : undefined);
-    console.log("Enhanced prompt:", enhancedPrompt, "refs:", refs.length);
+    console.log("refs:", refs.length, "thumbRefs:", thumbRefs.length, "face:", hasFace);
 
     const finalPrompt = refs.length
-      ? `Using the ${refs.length} provided reference image(s) as visual inspiration (style, lighting, composition, subject), create a brand new thumbnail: ${enhancedPrompt}`
+      ? `${buildReverseEngineerPrompt(thumbRefs.length || refs.length, hasFace, typeof titleText === "string" ? titleText : undefined)}
+
+USER BRIEF / TOPIC (any language — detect, understand, apply): ${prompt}
+
+SUPPORTING STYLE GUIDANCE (apply only where it does not contradict the reference recreation rules above):
+${enhancedPrompt}`
       : enhancedPrompt;
+
 
     // Build OpenAI-compatible multimodal content
     const userContent: any[] = [{ type: "text", text: finalPrompt }];
