@@ -150,9 +150,14 @@ export default function ThumbnailGeneratorPage() {
           const { data, error } = await supabase.functions.invoke("ai-thumbnail-generate", {
             body: {
               prompt: `${finalPrompt}${variations > 1 ? ` (Variation ${i + 1} of ${variations} — vary composition & angle)` : ""}`,
-              size, referenceImages: refs, titleText: title.trim() || undefined,
+              size,
+              referenceImages: refs,
+              referenceThumbnails: refImages.map(r => r.url),
+              faceImage: faceImage?.url,
+              titleText: title.trim() || undefined,
             },
           });
+
           // API key validation errors from the function
           if (data?.code === "missing_api_key") {
             toast.error("API key missing", { description: "Add GEMINI_API_KEY in Settings → Secrets." });
