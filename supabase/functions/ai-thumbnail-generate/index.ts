@@ -70,6 +70,49 @@ OUTPUT: ONE final flat 16:9-style thumbnail image (or the requested aspect ratio
 }
 
 
+function buildReverseEngineerPrompt(refCount: number, hasFace: boolean, titleText?: string): string {
+  const faceBlock = hasFace
+    ? `FACE REPLACEMENT (a separate user face reference IS provided — it is the LAST image):
+- Replace ONLY the facial identity of the primary foreground subject with the user's face.
+- Match the user's identity with maximum possible accuracy (bone structure, eyes, nose, lips, skin tone, facial hair, age).
+- PRESERVE from the reference: exact expression, emotional intensity, head angle, body pose, lighting direction, shadows, camera perspective, crop, hairstyle, clothing, body proportions.
+- Do NOT beautify, reshape, stylize, age, de-age, slim, or otherwise alter the user's face.
+- The result must look naturally photographed in the original scene — seamless skin tone, matching grain, matching color grade.
+- Do not replace faces of secondary/background subjects.`
+    : `FACE REPLACEMENT: No user face reference provided — keep the reference subject's identity intact.`;
+
+  const textBlock = titleText && titleText.trim()
+    ? `TEXT RULES: The user explicitly requested this on-thumbnail text — render EXACTLY: "${titleText.trim()}" (preserve wording, spelling, case; do not translate). Bold, instantly readable, dominant hierarchy, clean outline/shadow, placed in the reference's text zone if one exists. No other text.`
+    : `TEXT RULES:
+- If the reference contains text: preserve the EXACT wording, font style, weight, color, outline, shadow, placement and hierarchy. Fix distorted, misspelled, duplicated or unreadable lettering. Never invent extra text.
+- If the reference has no text: add NO text at all.`;
+
+  return `ROLE: You are an expert YouTube Thumbnail Reverse Engineer and Thumbnail Optimization AI.
+
+TASK: Analyze the ${refCount} provided reference thumbnail image(s) and generate an improved, highly clickable YouTube thumbnail while PRESERVING the original concept, subject identity, composition and visual intent. This is a faithful recreation + enhancement — NOT a new invented scene.
+
+REFERENCE ANALYSIS (do this internally before generating): main subject and identity; facial expression and emotional intensity; head angle and body pose; subject placement and crop; number/position of secondary subjects; background environment; foreground/background depth; camera perspective; lighting direction; color palette; contrast; existing text and its hierarchy; visual focal point; negative space; motion/directional flow; story-communicating objects; overall thumbnail style.
+
+${faceBlock}
+
+IMPROVEMENT (only where it raises CTR, never destroying the concept): stronger focal point, clearer subject separation, more readable expression, better contrast, cleaner hierarchy, stronger color separation, more cinematic lighting, more intentional depth, better edge definition, more powerful composition, better readability at small sizes. Do NOT randomly add objects, people, text, effects or clutter.
+
+${textBlock}
+
+COMPOSITION: maintain the reference's core composition; primary subject stays the dominant focal point; preserve left/right positioning unless a change clearly improves it; keep faces and key objects away from unnecessary cropping; maintain natural foreground/midground/background depth; keep leading lines and directional movement present in the reference.
+
+VISUAL QUALITY: photorealistic, ultra-sharp detail, high dynamic range, strong but realistic contrast, clean edges, natural skin texture, accurate shadows, cinematic lighting, professional color grading, premium YouTube-thumbnail aesthetic, excellent readability at 1280x720 and on small mobile screens.
+
+AVOID: plastic skin, over-smoothing, unnatural anatomy, extra fingers/limbs, duplicate people, duplicate objects, distorted faces, random background changes, unnecessary blur, excessive glow or HDR, oversaturation, AI artifacts, incorrect text, watermarks, logos not in the reference, unwanted borders or captions.
+
+CTR PRIORITIES: immediate comprehension, strong emotional reaction, clear subject/story, high contrast, face/emotion visibility, simple hierarchy, curiosity, mobile readability. The idea must land within one second.
+
+OUTPUT: ONE flat 16:9 landscape image, 1280x720, professional commercial quality, no watermark, no unnecessary text or elements.
+
+FINAL INSTRUCTION: Recreate the reference as accurately as possible, then intelligently enhance its visual impact and CTR potential while preserving the original story and identity.`;
+}
+
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
