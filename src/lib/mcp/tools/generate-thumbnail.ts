@@ -3,6 +3,24 @@ declare const Deno: { env: { get(key: string): string | undefined } };
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 
+// Per-caller (subject-keyed) token bucket: 5 generations per minute.
+const RATE_LIMIT = 5;
+const WINDOW_MS = 60_000;
+const buckets = new Map<string, number[]>();
+
+function allowRequest(subject: string): boolean {
+  const now = Date.now();
+  const hits = (buckets.get(subject) ?? []).filter((t) => now - t < WINDOW_MS);
+  if (hits.length >= RATE_LIMIT) {
+    buckets.set(subject, hits);
+    return false;
+  }
+  hits.push(now);
+  buckets.set(subject, hits);
+  return true;
+}
+
+
 export default defineTool({
   name: "generate_thumbnail",
   title: "Generate AI Thumbnail",

@@ -8,6 +8,20 @@ import { defineMcp, auth } from "npm:@lovable.dev/mcp-js@0.23.0";
 // src/lib/mcp/tools/generate-thumbnail.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z } from "npm:zod@^4.4.3";
+var RATE_LIMIT = 5;
+var WINDOW_MS = 6e4;
+var buckets = /* @__PURE__ */ new Map();
+function allowRequest(subject) {
+  const now = Date.now();
+  const hits = (buckets.get(subject) ?? []).filter((t) => now - t < WINDOW_MS);
+  if (hits.length >= RATE_LIMIT) {
+    buckets.set(subject, hits);
+    return false;
+  }
+  hits.push(now);
+  buckets.set(subject, hits);
+  return true;
+}
 var generate_thumbnail_default = defineTool({
   name: "generate_thumbnail",
   title: "Generate AI Thumbnail",
