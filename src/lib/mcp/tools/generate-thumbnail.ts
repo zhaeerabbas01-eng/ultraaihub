@@ -41,7 +41,7 @@ export default defineTool({
   annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
   handler: async ({ prompt, size, titleText }, ctx) => {
     // Paid-credit consuming tool: require a verified caller identity.
-    const subject = ctx?.isAuthenticated ? (ctx.getClaims()?.sub as string | undefined) : undefined;
+    const subject = ctx?.isAuthenticated() ? (ctx.getClaims()?.sub as string | undefined) : undefined;
     if (!subject) {
       return {
         content: [{ type: "text", text: "Authentication required: sign in to generate thumbnails." }],

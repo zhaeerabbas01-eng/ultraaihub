@@ -33,7 +33,7 @@ var generate_thumbnail_default = defineTool({
   },
   annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
   handler: async ({ prompt, size, titleText }, ctx) => {
-    const subject = ctx?.isAuthenticated ? ctx.getClaims()?.sub : void 0;
+    const subject = ctx?.isAuthenticated() ? ctx.getClaims()?.sub : void 0;
     if (!subject) {
       return {
         content: [{ type: "text", text: "Authentication required: sign in to generate thumbnails." }],
