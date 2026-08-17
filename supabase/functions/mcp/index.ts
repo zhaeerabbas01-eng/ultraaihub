@@ -18,7 +18,20 @@ var generate_thumbnail_default = defineTool({
     titleText: z.string().max(120).optional().describe("Optional exact headline text to render on the thumbnail.")
   },
   annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
-  handler: async ({ prompt, size, titleText }) => {
+  handler: async ({ prompt, size, titleText }, ctx) => {
+    const subject = ctx?.isAuthenticated ? ctx.getClaims()?.sub : void 0;
+    if (!subject) {
+      return {
+        content: [{ type: "text", text: "Authentication required: sign in to generate thumbnails." }],
+        isError: true
+      };
+    }
+    if (!allowRequest(subject)) {
+      return {
+        content: [{ type: "text", text: "Rate limit exceeded. Try again in a minute." }],
+        isError: true
+      };
+    }
     const base = Deno.env.get("SUPABASE_URL");
     const anon = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
     if (!base || !anon) {
