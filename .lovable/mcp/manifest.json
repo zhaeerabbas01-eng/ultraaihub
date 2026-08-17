@@ -3,7 +3,14 @@
   "sdk_version": "0.23.0",
   "path": "/functions/v1/mcp",
   "auth": {
-    "type": "none"
+    "type": "oauth",
+    "issuer": "https://jkkbxzsgnskqnpzwbapw.supabase.co/auth/v1",
+    "resource": "https://jkkbxzsgnskqnpzwbapw.supabase.co/functions/v1/mcp",
+    "resource_name": "Ultra Media AI Hub MCP",
+    "accepted_audiences": [
+      "authenticated"
+    ],
+    "jwks_uri": "https://jkkbxzsgnskqnpzwbapw.supabase.co/auth/v1/.well-known/jwks.json"
   },
   "mcp": {
     "server": {

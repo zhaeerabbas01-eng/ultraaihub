@@ -3,7 +3,7 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { defineMcp, auth } from "npm:@lovable.dev/mcp-js@0.23.0";
 
 // src/lib/mcp/tools/generate-thumbnail.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.23.0";
@@ -146,11 +146,19 @@ var youtube_video_info_default = defineTool4({
 });
 
 // src/lib/mcp/index.ts
+var SUPABASE_URL = "https://jkkbxzsgnskqnpzwbapw.supabase.co";
 var mcp_default = defineMcp({
   name: "ultra-media-ai-hub",
   title: "Ultra Media AI Hub",
   version: "0.1.0",
-  instructions: "Tools from Ultra Media AI Hub. Use `generate_thumbnail` to create viral YouTube/social thumbnails from any-language prompts. Use `get_youtube_video_info`, `extract_youtube_tags`, and `check_youtube_monetization` for public YouTube metadata and creator research. All tools operate on public data; no authentication required.",
+  instructions: "Tools from Ultra Media AI Hub. Use `generate_thumbnail` to create viral YouTube/social thumbnails from any-language prompts. Use `get_youtube_video_info`, `extract_youtube_tags`, and `check_youtube_monetization` for public YouTube metadata and creator research. All tools require an authenticated OAuth session.",
+  auth: auth.oauth.issuer({
+    issuer: `${SUPABASE_URL}/auth/v1`,
+    jwksUri: `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+    acceptedAudiences: ["authenticated"],
+    resource: `${SUPABASE_URL}/functions/v1/mcp`,
+    resourceName: "Ultra Media AI Hub MCP"
+  }),
   tools: [generate_thumbnail_default, extract_youtube_tags_default, check_monetization_default, youtube_video_info_default]
 });
 
