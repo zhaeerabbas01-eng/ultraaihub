@@ -3,11 +3,25 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { defineMcp, auth } from "npm:@lovable.dev/mcp-js@0.23.0";
 
 // src/lib/mcp/tools/generate-thumbnail.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z } from "npm:zod@^4.4.3";
+var RATE_LIMIT = 5;
+var WINDOW_MS = 6e4;
+var buckets = /* @__PURE__ */ new Map();
+function allowRequest(subject) {
+  const now = Date.now();
+  const hits = (buckets.get(subject) ?? []).filter((t) => now - t < WINDOW_MS);
+  if (hits.length >= RATE_LIMIT) {
+    buckets.set(subject, hits);
+    return false;
+  }
+  hits.push(now);
+  buckets.set(subject, hits);
+  return true;
+}
 var generate_thumbnail_default = defineTool({
   name: "generate_thumbnail",
   title: "Generate AI Thumbnail",
@@ -18,7 +32,20 @@ var generate_thumbnail_default = defineTool({
     titleText: z.string().max(120).optional().describe("Optional exact headline text to render on the thumbnail.")
   },
   annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
-  handler: async ({ prompt, size, titleText }) => {
+  handler: async ({ prompt, size, titleText }, ctx) => {
+    const subject = ctx?.isAuthenticated() ? ctx.getClaims()?.sub : void 0;
+    if (!subject) {
+      return {
+        content: [{ type: "text", text: "Authentication required: sign in to generate thumbnails." }],
+        isError: true
+      };
+    }
+    if (!allowRequest(subject)) {
+      return {
+        content: [{ type: "text", text: "Rate limit exceeded. Try again in a minute." }],
+        isError: true
+      };
+    }
     const base = Deno.env.get("SUPABASE_URL");
     const anon = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
     if (!base || !anon) {
@@ -146,11 +173,19 @@ var youtube_video_info_default = defineTool4({
 });
 
 // src/lib/mcp/index.ts
+var SUPABASE_URL = "https://jkkbxzsgnskqnpzwbapw.supabase.co";
 var mcp_default = defineMcp({
   name: "ultra-media-ai-hub",
   title: "Ultra Media AI Hub",
   version: "0.1.0",
-  instructions: "Tools from Ultra Media AI Hub. Use `generate_thumbnail` to create viral YouTube/social thumbnails from any-language prompts. Use `get_youtube_video_info`, `extract_youtube_tags`, and `check_youtube_monetization` for public YouTube metadata and creator research. All tools operate on public data; no authentication required.",
+  instructions: "Tools from Ultra Media AI Hub. Use `generate_thumbnail` to create viral YouTube/social thumbnails from any-language prompts. Use `get_youtube_video_info`, `extract_youtube_tags`, and `check_youtube_monetization` for public YouTube metadata and creator research. All tools require an authenticated OAuth session.",
+  auth: auth.oauth.issuer({
+    issuer: `${SUPABASE_URL}/auth/v1`,
+    jwksUri: `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+    acceptedAudiences: ["authenticated"],
+    resource: `${SUPABASE_URL}/functions/v1/mcp`,
+    resourceName: "Ultra Media AI Hub MCP"
+  }),
   tools: [generate_thumbnail_default, extract_youtube_tags_default, check_monetization_default, youtube_video_info_default]
 });
 

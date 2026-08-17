@@ -3,6 +3,24 @@ declare const Deno: { env: { get(key: string): string | undefined } };
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 
+// Per-caller (subject-keyed) token bucket: 5 generations per minute.
+const RATE_LIMIT = 5;
+const WINDOW_MS = 60_000;
+const buckets = new Map<string, number[]>();
+
+function allowRequest(subject: string): boolean {
+  const now = Date.now();
+  const hits = (buckets.get(subject) ?? []).filter((t) => now - t < WINDOW_MS);
+  if (hits.length >= RATE_LIMIT) {
+    buckets.set(subject, hits);
+    return false;
+  }
+  hits.push(now);
+  buckets.set(subject, hits);
+  return true;
+}
+
+
 export default defineTool({
   name: "generate_thumbnail",
   title: "Generate AI Thumbnail",
@@ -21,12 +39,27 @@ export default defineTool({
       .describe("Optional exact headline text to render on the thumbnail."),
   },
   annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
-  handler: async ({ prompt, size, titleText }) => {
+  handler: async ({ prompt, size, titleText }, ctx) => {
+    // Paid-credit consuming tool: require a verified caller identity.
+    const subject = ctx?.isAuthenticated() ? (ctx.getClaims()?.sub as string | undefined) : undefined;
+    if (!subject) {
+      return {
+        content: [{ type: "text", text: "Authentication required: sign in to generate thumbnails." }],
+        isError: true,
+      };
+    }
+    if (!allowRequest(subject)) {
+      return {
+        content: [{ type: "text", text: "Rate limit exceeded. Try again in a minute." }],
+        isError: true,
+      };
+    }
     const base = Deno.env.get("SUPABASE_URL");
     const anon = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
     if (!base || !anon) {
       return { content: [{ type: "text", text: "Server not configured (missing SUPABASE_URL/anon key)." }], isError: true };
     }
+
     const res = await fetch(`${base}/functions/v1/ai-thumbnail-generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${anon}`, apikey: anon },
