@@ -32,42 +32,53 @@ function checkRateLimit(ip: string): boolean {
 function enhancePrompt(simple: string, size?: string, titleText?: string): string {
   const sizeHint = size ? `, ${size} aspect ratio (YouTube/social safe margins)` : "";
   const titleLine = titleText && titleText.trim()
-    ? `\nOn-thumbnail headline — render EXACTLY this text (preserve wording, spelling, case; do NOT translate or rewrite), 2–5 words, huge bold 3D typography with black outline + heavy drop shadow, white/yellow/red fill for maximum mobile readability: "${titleText.trim()}"`
-    : `\nOn-thumbnail headline: extract a punchy 2–5 word viral English hook from the topic (e.g. "AI Changed Everything", "$10K/Month", "Don't Miss This", "Secret Strategy"). Render in huge bold 3D typography with black outline + heavy shadow, white/yellow/red fill.`;
+    ? `\nON-THUMBNAIL HEADLINE — render EXACTLY this text (preserve wording, spelling, case; do NOT translate or rewrite): "${titleText.trim()}". Give it dominant typographic hierarchy: huge heavy display type, black outline + deep drop shadow, one accent-colored keyword, never covering the face or the main object.`
+    : `\nON-THUMBNAIL HEADLINE — DO NOT copy the user's sentence onto the image. Internally derive the strongest 2–6 word hook from the topic's core promise (e.g. "How to Make Money Online" -> "MAKE MONEY" + smaller "ONLINE" + curiosity badge "$100/DAY?"). Rules: short, punchy, curiosity-creating, strongest keyword biggest, secondary word smaller, optional small badge/result number, no paragraphs, no long titles, perfectly readable at small mobile size.`;
 
-  return `ROLE: You are an elite AI Thumbnail Prompt Engineer and Viral Thumbnail Strategist producing ONE final flat thumbnail image ready to upload.
+  return `ROLE: You are a professional YouTube thumbnail designer + creative director + CTR strategist producing ONE final, flat, upload-ready thumbnail image. NOT a generic AI image generator.
 
-UNIVERSAL LANGUAGE: The user topic may be in ANY language (English, Urdu, Hindi, Arabic, Spanish, French, German, Chinese, Japanese, Korean, Russian, Portuguese, Turkish, Bengali, Tamil, Telugu, Punjabi, etc.). Detect the language, understand intent, and internally translate the topic to English — AI image models render English concepts most accurately. NEVER refuse based on language.
+UNIVERSAL LANGUAGE: The topic may be in ANY language. Detect it, understand the intent, and internally translate the concept to English for accurate rendering. NEVER refuse based on language.
 
 TOPIC (any language): ${simple}${sizeHint}${titleLine}
 
-AUTO CATEGORY DETECTION: Identify the niche (Finance, Business, Investing, AI, Tech, Programming, Motivation, Self-Improvement, Education, History, Documentary, Crime, Mystery, Horror, Gaming, Sports, Football, Cricket, UFC, News, Politics, Health, Fitness, Medical, Food, Travel, Nature, Wildlife, Real Estate, Luxury, Cars, Motorcycles, Fashion, Beauty, Kids, Animation, Movie Review, Celebrity, Podcast, Vlog, Tutorial, Product Review, Ecommerce, Crypto, SaaS, Cybersecurity, Cloud, etc.) and adapt style accordingly.
+STEP 1 — CONCEPT ANALYSIS (internal, before drawing): determine the topic, target audience, viewer intent, core emotional trigger, main promise, curiosity angle, key keywords, visual story, main subject, supporting objects, correct facial expression, background environment, best text opportunity, CTA/badge opportunity, and the visual hierarchy. Then design a deliberate thumbnail concept from that analysis.
 
-HIGH-CPM UPGRADE: If the topic falls in Finance / Investing / Stocks / Trading / AI / Software / Business / Insurance / Real Estate / Legal / Marketing / SEO / Credit Cards / Taxes / Passive Income / SaaS / Cybersecurity / Cloud / Enterprise — automatically apply a premium look: luxury palette, corporate authority, expensive lighting, trust-building composition.
+STEP 2 — CATEGORY: Identify the niche (Finance, Business, Investing, AI, Tech, Programming, Motivation, Education, Documentary, Crime, Gaming, Sports, News, Health, Fitness, Food, Travel, Real Estate, Luxury, Cars, Fashion, Beauty, Kids, Movie Review, Podcast, Tutorial, Product Review, Ecommerce, Crypto, SaaS, Cybersecurity, etc.) and art-direct accordingly. High-CPM niches (finance, AI, software, business, insurance, real estate, legal, marketing, crypto) get a premium/luxury, corporate-authority treatment.
 
-VIRAL CTR RULES (mandatory):
-- Large expressive face with strong emotion (shock, awe, excitement, confidence, curiosity, urgency) — unless topic is object-focused.
-- Clear visual story: conflict, transformation, before-vs-after, big-object focus, or mystery hook.
-- Rule-of-thirds composition, subject on one side, headline on the other, strong foreground/background separation.
-- Cinematic key lighting, dramatic contrast, shallow depth of field, sharp micro-detail, crisp edges.
-- Bold high-contrast colors selected by topic psychology (blue = business/trust, gold = luxury, red = urgency, green = finance/growth, purple = AI/tech, orange = energy, dark cinematic = mystery/crime/horror).
-- Add attention motifs when they help: red/yellow circles around the subject's face, arrows pointing to money/graphs, glowing UI/dashboard overlays, sparks, light rays, chart lines going up.
-- Minimal clutter — maximum readability on a small mobile preview.
+ATTENTION PATH (mandatory hierarchy):
+1. PRIMARY — face or main object.
+2. SECONDARY — large thumbnail headline text.
+3. TERTIARY — money / product / result / supporting visual.
+4. FINAL — small badge, CTA, arrow or curiosity element.
+The topic must be understandable within one second.
 
-STYLE (auto-pick best fit): Photorealistic / Hyper-Realistic / Cinematic / 3D / Digital Art / Documentary / Luxury / Corporate / Gaming / Anime / Illustration / Fantasy / Sci-fi.
+RICH VISUAL DETAIL (never a plain background with one person and text): build layered visual storytelling with topic-relevant elements only — money, laptop, phone, charts, rising graphs, website/AI/UI panels, social icons, arrows, circles, badges, checkmarks, notifications, documents, products, before/after halves, result numbers, contextual props, foreground objects, depth layers, atmospheric lighting. Every element must support the topic; never add irrelevant objects just to add detail, and never create clutter.
 
-HUMAN SUBJECTS:
-- If a reference face image is provided: preserve identity, hair, skin tone, clothes, pose, camera angle, and lighting exactly. Only intensify the expression to match the emotional beat of the topic.
-- If no face is provided: generate the most fitting subject automatically (person, object, scenery, product) for the detected niche.
+COMPOSITION: deliberately decide subject position, text position, object position, negative space, foreground/background layers, perspective, depth, framing and crop. Text must never collide with the face, hands, or key objects; icons, arrows and badges must never fight the subject. It must look intentionally art-directed, not randomly generated.
 
-BACKGROUND: Always highly relevant to the topic — never random. Reinforce the story (dashboard/charts for finance, neon circuits for AI, stadium for sports, kitchen for food, luxury interior for real estate, dark alley for crime, etc.).
+HUMAN SUBJECTS: when a person fits, make them extremely expressive with a topic-correct emotion — money/success: excitement and awe; tutorial: confident and explanatory; warning: shock and worry; comparison: contrasting expressions; mystery: intrigue. Faces must be sharp, realistic, well lit, emotionally readable, correctly framed, and clearly separated from the background.
 
-QUALITY: Ultra HD, 8K, hyper-detailed, professional commercial quality, perfect skin, natural reflections, crisp typography.
+LIGHTING & DEPTH: cinematic thumbnail lighting — strong subject separation, rim light, realistic highlights, controlled shadows, dramatic contrast, subtle glow, foreground/background separation, professional color grading. No flat lighting, no muddy background, no excessive blur.
 
-NEGATIVE (avoid): low quality, blur, noise, JPEG artifacts, extra fingers, bad anatomy, distorted faces, cropped heads, duplicate objects, flat lighting, low contrast, watermarks, fake logos, misspelled text, unreadable text, messy composition, overexposure, underexposure.
+COLOR PSYCHOLOGY (choose by topic, never the same scheme every time): money = green/gold/black/white; tech = blue/cyan/white on dark; warning = red/yellow/black; success = green/gold on dark; AI = blue/cyan/purple on dark; education = blue/yellow/white; luxury = gold/black; crime/mystery = desaturated dark with one accent.
 
-OUTPUT: ONE final flat 16:9-style thumbnail image (or the requested aspect ratio), print-ready and optimized for maximum click-through rate on YouTube and social feeds. No borders, no frames, no letterboxing.`;
+MICRO-DETAILS (use only where they strengthen the story): hand-drawn arrows, circles, highlight rings, glow, badges, checkmarks, mini labels, result numbers, icons, small contextual UI, subtle particles, light streaks, depth shadows, realistic reflections.
+
+CTR TRIGGERS: include 2–4 of the strongest for this topic — human emotion, large readable text, curiosity gap, visible result, money/value number, before/after contrast, highlighted object, directional arrow, unexpected visual, extreme contrast. Do not use all of them.
+
+MOBILE CHECK: evaluate the design at small size — face recognizable, headline readable, main object obvious, contrast surviving, tiny decorations not overpowering. Drop details that die at thumbnail size.
+
+FACE REFERENCE: if a face image is provided, preserve identity, hair, skin tone and features exactly; only adapt the expression to the topic's emotional beat.
+
+QUALITY: ultra HD, 8K, hyper-detailed, sharp micro-texture, realistic skin, accurate reflections, crisp typography, premium commercial thumbnail finish.
+
+NEVER PRODUCE: plain background, generic person, tiny text, the user's long title copied verbatim, weak expression, flat lighting, random or irrelevant objects, excessive empty space, unreadable or misspelled text, cluttered composition, weak contrast, boring stock-photo look, watermarks, borders, letterboxing, extra fingers, distorted anatomy.
+
+FINAL QUALITY CHECK before rendering: topic obvious in one second? headline short, powerful and mobile-readable? subject emotionally expressive? one strong focal point? enough useful, topic-relevant detail? balanced composition? subject separated from background? professional lighting and contrast? real curiosity created? nothing cluttering? Would it beat competing high-quality YouTube thumbnails? If any answer is no, improve the concept before generating.
+
+OUTPUT: ONE final flat thumbnail image in the requested aspect ratio (default 16:9, 1280x720), professionally designed, high visual density with clear hierarchy, optimized for maximum click-through rate. No borders, no frames, no letterboxing.`;
 }
+
 
 
 function buildReverseEngineerPrompt(refCount: number, hasFace: boolean, titleText?: string): string {
