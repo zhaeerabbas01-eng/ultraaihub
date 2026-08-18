@@ -1,10 +1,13 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Footer } from "@/components/Footer";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import logoImg from "@/assets/logo.png";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const hideFooter = pathname === "/thumbnail-generator";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -26,7 +29,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <main className="flex-1 p-4 md:p-6 overflow-auto">
             {children}
           </main>
-          <Footer />
+          {!hideFooter && <Footer />}
         </div>
       </div>
     </SidebarProvider>
