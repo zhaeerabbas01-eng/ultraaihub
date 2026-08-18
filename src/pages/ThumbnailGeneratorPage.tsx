@@ -259,6 +259,11 @@ export default function ThumbnailGeneratorPage() {
             <div className="w-full max-w-md rounded-2xl overflow-hidden ring-1 ring-white/10">
               <video src={demoVideo.url} autoPlay loop muted playsInline className="w-full h-auto" />
             </div>
+            <div className="mt-5 w-full max-w-3xl">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 mb-2">Made with Ultra Media AI Hub</p>
+              <ThumbnailMarquee />
+            </div>
+
             <div className="mt-5 flex flex-wrap gap-2 justify-center max-w-xl">
               {["MrBeast style $10,000 challenge", "Cinematic AI tech ad thumbnail", "Shocking finance headline", "Gaming stream face-cam"].map(s => (
                 <button key={s} onClick={() => setPrompt(s)} className="text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-muted-foreground hover:text-white transition">
