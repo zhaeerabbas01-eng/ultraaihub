@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import demoVideo from "@/assets/thumb-magic.mp4.asset.json";
+import { ThumbnailMarquee } from "@/components/ThumbnailMarquee";
+
 
 const sizeOptions = [
   { value: "16:9", label: "16:9 YouTube" },
