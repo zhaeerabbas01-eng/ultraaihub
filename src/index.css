@@ -110,3 +110,15 @@
   animation-play-state: paused;
 }
 
+
+/* Thumbnail samples marquee */
+@keyframes thumb-marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-thumb-marquee {
+  animation: thumb-marquee 40s linear infinite;
+}
+@media (max-width: 640px) {
+  .animate-thumb-marquee { animation-duration: 28s; }
+}
